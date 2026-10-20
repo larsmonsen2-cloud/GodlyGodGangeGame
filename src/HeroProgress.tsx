@@ -1,3 +1,4 @@
+import { heroChronicle } from './reputation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { answersToLevel, damageFor, WEAPONS, xpNeeded, type Attribute, type Hero } from './progression';
 import { SavingGoal } from './SavingGoal';
@@ -38,11 +39,15 @@ const attributes: { key: Attribute; label: string }[] = [
   { key: 'maxHealth', label: 'Helse' },
 ];
 
-export function HeroProgress({ hero, status }: { hero: Hero; status: StorageStatus }) {
+export function HeroProgress({ hero, status, reputationNotice }: { hero: Hero; status: StorageStatus; reputationNotice: string | null }) {
   const [choosing, setChoosing] = useState(false);
   const weapon = WEAPONS[hero.weapon];
+  const chronicle = heroChronicle(hero);
   return <>
     <div className="hero-heading"><h2 className="hero-name-heading">{hero.name}</h2><span key={hero.gold} className="gold-count changed-value">{hero.gold} gull</span></div>
+    <p className="hero-title">{chronicle.title}</p>
+    <p className="hero-chronicle">{chronicle.story}</p>
+    {reputationNotice && !choosing && <div className="reputation-notice" role="status"><strong>Ryktet ditt har vokst!</strong><button type="button" onClick={()=>game.dismissReputation()}>Fortsett</button></div>}
     <Progress hero={hero} />
     <dl className="hero-stats"><div><dt>Styrke</dt><dd>{hero.strength}</dd></div><div><dt>Magi</dt><dd>{hero.magic}</dd></div><div><dt>Maks liv</dt><dd>{hero.maxHealth}</dd></div></dl>
     <button className="points-button" type="button" disabled={!hero.points} onClick={() => setChoosing(true)}>{hero.points ? `Fordel ${hero.points} poeng` : '0 ubrukte poeng'}<span aria-hidden="true">{hero.points ? '+' : '✦'}</span></button>
@@ -51,6 +56,7 @@ export function HeroProgress({ hero, status }: { hero: Hero; status: StorageStat
     <SavingGoal hero={hero} actionable compact />
     <StorageNotice status={status} />
     <div className="hero-actions"><button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button><button className="primary arena-button" type="button" onClick={() => game.openArena()}><span>Arena</span><span aria-hidden="true">⚔</span></button><button className="primary shop-button" type="button" onClick={() => game.openShop()}><span>Butikk</span><span aria-hidden="true">◇</span></button></div>
+    <button className="edit-appearance" type="button" onClick={()=>game.openAppearance()}>Endre utseende</button>
     {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
       <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>
       <div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => game.spend(key)}>

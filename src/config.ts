@@ -1,4 +1,5 @@
 export const CONFIG = {
+  reputation: { levelThresholds: [1, 3, 6, 10, 15] },
   minFactor: 1,
   maxFactor: 10,
   maxDigits: 3,
@@ -54,6 +55,9 @@ export const CONFIG = {
     { id: 'forest', name: 'Skoggrønn', value: '#69b89a', dark: '#397d68' },
     { id: 'berry', name: 'Bærrosa', value: '#d6849a', dark: '#9b506b' },
     { id: 'sky', name: 'Himmelblå', value: '#7caedc', dark: '#507cad' },
+    { id: 'sun', name: 'Solgul', value: '#dfbe65', dark: '#aa853c' },
+    { id: 'violet', name: 'Plommelilla', value: '#ab88c6', dark: '#74558e' },
+    { id: 'ember', name: 'Glødrød', value: '#d87860', dark: '#994d3c' },
   ],
 } as const;
 

@@ -49,7 +49,7 @@ export function Shop({ hero, purchase, status, reduced }: { hero: Hero; purchase
       {!visible.length && <p className="empty-shop">Du eier ingen våpen i denne kategorien ennå.</p>}
     </div>
     {purchase && <Modal title="Nytt våpen!" onClose={() => game.finishShoppingCelebration()}>
-      <div className="purchase-portrait"><SceneView color={hero.color} weapon={hero.weapon} reduced={reduced} /></div>
+      <div className="purchase-portrait"><SceneView appearance={hero.appearance} color={hero.color} weapon={hero.weapon} reduced={reduced} /></div>
       <h3 className="purchase-name">{WEAPONS[purchase.weapon].name}</h3>
       <p className="purchase-damage">{purchase.previousDamage} → <strong>{purchase.newDamage}</strong> skade</p>
       {purchase.newDamage < purchase.previousDamage && <p className="purchase-note">Lavere skade med dine nåværende egenskaper.</p>}

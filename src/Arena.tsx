@@ -1,3 +1,4 @@
+import { heroChronicle } from './reputation';
 import { useEffect, useState } from 'react';
 import { SavingGoal } from './SavingGoal';
 import { SoundButton } from './SoundButton';
@@ -27,7 +28,7 @@ export function ArenaIntro({ hero, enemyId, reduced }: { hero: Hero; enemyId:Ene
  return <main className={`arena-intro ${enemy.boss?'boss-intro':''}`}>
   <div className="intro-toolbar"><button className="back-button" onClick={()=>game.openArena()}>← Arenaoversikt</button><SoundButton/></div>
   <span className="eyebrow">KAMP {enemy.number} AV 10{enemy.boss?' · BOSS':''}</span><h1>{enemy.name}</h1><p className="enemy-title">{enemy.subtitle}</p>
-  <div className="arena-preview"><SceneView color={hero.color} weapon={hero.weapon} training arena enemyId={enemyId} reduced={reduced}/></div>
+  <div className="arena-preview"><SceneView appearance={hero.appearance} color={hero.color} weapon={hero.weapon} training arena enemyId={enemyId} reduced={reduced}/></div>
   <p className="enemy-quote">«{enemy.description}»</p>
   <div className="enemy-facts"><span><b>{enemy.health}</b> liv</span><span><b>{enemy.damage}</b> skade / {enemy.interval/1000} sek</span><span><b>{enemy.gold}</b> gull per seier</span></div>
   {bonus>0&&<p className="boss-bonus">+{bonus} gull ved første bossseier</p>}
@@ -42,13 +43,14 @@ export function ArenaHud({hero,combat,feedbackLocked}:{hero:Hero;combat:Combat;f
  return <><div className="health-bars"><div><span>{hero.name}</span><progress aria-label="Heltens liv" value={combat.hp} max={hero.maxHealth}/><b>{combat.hp}/{hero.maxHealth}</b></div><div><span>{enemy.name}{enemy.boss?' · BOSS':''}</span><progress aria-label={`${enemy.name}s liv`} value={combat.enemyHp} max={enemy.health}/><b>{combat.enemyHp}/{enemy.health}</b></div></div>
  <div className="enemy-clock"><span>{combat.outcome!=='active'?'Kampen er over':combat.paused?'Kampen er pauset':feedbackLocked?`${enemy.name} venter mens du leser`:`${enemy.name}s neste angrep`}</span><progress aria-label={`${enemy.name}s angrepsmåler`} value={enemy.interval-remaining} max={enemy.interval}/></div></>;
 }
-export function ArenaOverlay({combat,hero,status}:{combat:Combat;hero:Hero;status:StorageStatus}) {
+export function ArenaOverlay({combat,hero,status,reputationNotice}:{combat:Combat;hero:Hero;status:StorageStatus;reputationNotice:string|null}) {
  const enemy=enemyById(combat.enemyId);
  if(combat.resultReady) {
   const won=combat.outcome==='won',reward=combat.reward;
   return <Modal title={won?(reward?.completed?'Tronen er din!':'Seier!'):`${enemy.name} vant denne gangen`} onClose={()=>game.openArena()}>
    <div className={`result-emblem ${won?'victory':'defeat'}`} aria-hidden="true">{reward?.completed?'♛':won?'✦':'↗'}</div>
    {won&&reward?<><p className="modal-description">{reward.completed?'Alle ti kampene er beseiret! Spill favorittene igjen, eller besøk Våpensmeden.':`${enemy.name} er beseiret!`}</p><dl className="reward-breakdown"><div><dt>Kampbelønning</dt><dd>{reward.regular} gull</dd></div>{reward.bonus>0&&<div><dt>Første bossseier</dt><dd>+{reward.bonus} gull</dd></div>}<div><dt>Totalt</dt><dd>{reward.regular+reward.bonus} gull</dd></div></dl>{reward.unlocked&&<p className="unlock-notice">Låst opp: {enemyById(reward.unlocked).name}</p>}<SavingGoal hero={hero} actionable/></>:<p className="modal-description">Tren litt mer eller prøv et bedre våpen.</p>}
+   {reputationNotice&&<div className="reputation-notice"><strong>Ryktet ditt har vokst!</strong><span>{heroChronicle(hero).title}</span><button onClick={()=>game.leaveTraining()}>Se helten</button></div>}
    <StorageNotice status={status}/>
    {reward?.unlocked&&<button className="primary" onClick={()=>game.selectEnemy(reward.unlocked!)}>Neste motstander</button>}
    <button className={reward?.unlocked?'secondary':'primary'} onClick={()=>game.startArena()}>{won?'Kjemp igjen':'Prøv igjen'}</button>

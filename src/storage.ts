@@ -1,3 +1,5 @@
+import { normalizeAppearance, validAppearance } from './appearance';
+import { normalizeReputation } from './reputation';
 import { ENEMIES, isEnemyId } from './enemies';
 import { CONFIG } from './config';
 import { WEAPONS, xpNeeded, type Hero } from './progression';
@@ -5,14 +7,13 @@ import { WEAPONS, xpNeeded, type Hero } from './progression';
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid';
 function validCore(value: unknown): value is Hero {
   if (!value || typeof value !== 'object') return false;
   const h = value as Hero;
-  if (typeof h.name !== 'string' || h.name !== h.name.trim() || !h.name || Array.from(h.name).length > CONFIG.maxNameLength ||
-      !CONFIG.colors.some(c => c.id === h.color)) return false;
+  if (typeof h.name !== 'string' || h.name !== h.name.trim() || !h.name || Array.from(h.name).length > CONFIG.maxNameLength) return false;
   if (![h.level, h.xp, h.strength, h.magic, h.maxHealth, h.points, h.gold].every(n => Number.isSafeInteger(n) && n >= 0)) return false;
   const { initial, increase } = CONFIG.progression;
   if (h.level < 1 || !Number.isSafeInteger(xpNeeded(h.level)) || h.xp >= xpNeeded(h.level) || h.strength < initial.strength || h.magic < initial.magic || h.maxHealth < initial.maxHealth) return false;
@@ -35,10 +36,14 @@ function restoreArena(h: Hero, version: number): Hero {
   const claimedBossBonuses = version < 3 ? [] : [...new Set(Array.isArray(h.claimedBossBonuses) ? h.claimedBossBonuses.filter(id => isEnemyId(id) && ENEMIES.some(e=>e.id===id && e.boss)) : [])];
   return {...h,defeatedEnemies,claimedBossBonuses};
 }
-export function validHero(value: unknown): value is Hero {
+function validPreviousHero(value: unknown): value is Hero {
   if (!validEquipment(value)) return false;
   const clean=restoreArena(value,3);
   return JSON.stringify(value.defeatedEnemies)===JSON.stringify(clean.defeatedEnemies) && JSON.stringify(value.claimedBossBonuses)===JSON.stringify(clean.claimedBossBonuses);
+}
+export function validHero(value: unknown): value is Hero {
+  if (!validPreviousHero(value)) return false;
+  return validAppearance(value.appearance) && value.color===value.appearance.clothes && JSON.stringify(value.reputation)===JSON.stringify(normalizeReputation(value));
 }
 function restoreEquipment(h: Hero, version: number): Hero {
   if (version === 1) {
@@ -59,12 +64,14 @@ export function loadHero(storage: SaveStorage | null): { hero: Hero | null; stat
   try {
     if (raw === null) return { hero: null, status: 'saved' };
     const save = JSON.parse(raw);
-    if (![1,2,SAVE_VERSION].includes(save?.version) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
-    const hero = restoreArena(restoreEquipment(save.hero, save.version), save.version);
-    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : save.version === 2 ? !validEquipment(save.hero) : !validHero(save.hero);
+    if (![1,2,3,SAVE_VERSION].includes(save?.version) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
+    const restored = restoreArena(restoreEquipment(save.hero, save.version), save.version);
+    const appearance = normalizeAppearance(save.version < 4 ? null : restored.appearance, restored.color);
+    const hero = {...restored, appearance, color: appearance.clothes, reputation: normalizeReputation(restored,save.version<4)};
+    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : save.version === 2 ? !validEquipment(save.hero) : save.version === 3 ? !validPreviousHero(save.hero) : !validHero(save.hero);
     const changed = save.version !== SAVE_VERSION || repaired;
     return { hero, status: changed ? saveHero(storage, hero) : 'saved',
-      ...(repaired ? { notice: 'Ukjente eller ugyldige utstyrs- og arenadata ble reparert. Øvrig fremgang er beholdt.' } : {}) };
+      ...(repaired ? { notice: 'Ukjente eller ugyldige heltedata ble reparert. Øvrig fremgang er beholdt.' } : {}) };
   } catch { return { hero: null, status: 'invalid' }; }
 }
 export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {

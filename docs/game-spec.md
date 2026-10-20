@@ -505,3 +505,9 @@ Arena-knappen åpner oversikten; et kampkort åpner introduksjonen, og bare Star
 Lagring versjon 3: `defeatedEnemies` og `claimedBossBonuses` sammen med eksisterende hero-data. Gamle versjoner hadde ikke seiershistorikk, så migreringen åpner bare kamp 1 og beholder alt annet. Validering beholder en sammenhengende rekke kjente seire og kjente registrerte bossutbetalinger; ukjente og ugyldige referanser gir reparasjonsvarsel. Aktive kamper lagres aldri.
 
 Full bestilling finnes i `arena-progression-spec.md`. Faktiske verdier, modell og begrensninger finnes i `arena-balance.md`. Verifiserte flyter finnes i `verification.md`.
+
+## Implementert tillegg: fase 7 – personlig helt
+
+Bestillingen i character-spec.md er implementert. Karakterbyggeren bruker seks kosmetikkategorier og samme figurrigg som resten av spillet. Utseenderedigering er midlertidig frem til Lagre og endrer ingen spillverdier. Heltesiden har en poengbasert profil, fem varige pompøsitetstrinn og en deterministisk kort krønike. Bare registrerte seire gir bragdtekst.
+
+Detaljerte regler, nivågrenser, bragdprioritet og lagringsversjon 4 er dokumentert i character-system.md. Rykteoppdatering fra trening utsettes til heltesiden; bossoppdatering vises i eksisterende seier. Byggeren kan scrolle, og spillhandlingene er faste nederst på mobilheltesiden. Eksisterende regne-, pause-, poeng- og balanseregler beholdes.

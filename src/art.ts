@@ -1,3 +1,4 @@
+import { DEFAULT_APPEARANCE, SKINS, HAIR_COLORS, type Appearance } from './appearance';
 import Phaser from 'phaser';
 import { CONFIG, type HeroColor } from './config';
 import { weaponShapes } from './weaponVisuals';
@@ -7,11 +8,13 @@ import type { WeaponId } from './progression';
 export const ANCHORS = { head: { x: 0, y: -139 }, hand: { x: 38, y: -84 }, shield: { x: -34, y: -83 }, helmet: { x: 0, y: -173 } };
 const color = (hex: string) => Phaser.Display.Color.HexStringToColor(hex).color;
 
-export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: HeroColor, equipped: WeaponId = 'stick') {
+export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: HeroColor, equipped: WeaponId = 'stick', appearance: Appearance = DEFAULT_APPEARANCE) {
   const palette = CONFIG.colors.find(c => c.id === chosen)!;
   const root = scene.add.container(x, y);
   const body = scene.add.graphics();
   root.add(body);
+  const skin = color(SKINS.find(item=>item.id===appearance.skin)!.value);
+  const hair = color(HAIR_COLORS.find(item=>item.id===appearance.hairColor)!.value);
   // Cape, trousers and oversized leather boots.
   body.fillStyle(0x284f49).fillTriangle(-28, -112, -47, -36, 30, -34);
   body.fillStyle(0x333e3c).fillRoundedRect(-24, -53, 19, 44, 7).fillRoundedRect(6, -53, 19, 44, 7);
@@ -25,18 +28,48 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   body.fillStyle(0xe6bb68).fillRoundedRect(-6, -64, 14, 15, 3);
   body.fillStyle(0x8a6542).fillRect(-2, -60, 6, 7);
   body.fillStyle(color(palette.dark)).fillRoundedRect(-45, -113, 20, 33, 7);
-  body.fillStyle(0xefb986).fillRoundedRect(-44, -88, 17, 24, 7);
-  // Head, ears, unruly hair and a determined little smile.
-  body.fillStyle(0xefb986).fillCircle(-30, -143, 10).fillCircle(30, -143, 10);
-  body.fillStyle(0xf4c897).fillRoundedRect(-31, -179, 63, 68, 24);
-  body.fillStyle(0x553e32).fillRoundedRect(-34, -186, 68, 34, 13);
-  body.fillTriangle(-35, -160, -26, -186, -17, -150);
-  body.fillTriangle(-14, -175, 9, -190, 8, -153);
-  body.fillTriangle(7, -178, 29, -182, 31, -156);
-  body.fillTriangle(-13, -183, 0, -202, 12, -181);
-  body.fillStyle(0x273c38).fillRoundedRect(-16, -148, 5, 10, 2).fillRoundedRect(12, -148, 5, 10, 2);
-  body.fillStyle(0xe6a17c).fillEllipse(-22, -133, 11, 6).fillEllipse(24, -133, 11, 6);
-  body.lineStyle(2.5, 0x935940).beginPath().moveTo(-5, -127).lineTo(2, -124).lineTo(10, -128).strokePath();
+  body.fillStyle(skin).fillRoundedRect(-44, -88, 17, 24, 7);
+  // Long hair behind the head; front hair and facial detail remain separate layers.
+  if (appearance.hairStyle==='long') body.fillStyle(hair).fillRoundedRect(-39,-187,78,92,20);
+  body.fillStyle(skin).fillCircle(-30,-143,10).fillCircle(30,-143,10);
+  body.fillStyle(skin).fillRoundedRect(-31,-179,63,68,24);
+  const face=scene.add.graphics(); root.add(face);
+  const faceInk = appearance.skin==='umber'||appearance.skin==='chestnut' ? 0xf2dcc0 : 0x273c38;
+  if(appearance.expression==='stern'||appearance.expression==='worried') face.fillStyle(0xfff2db).fillEllipse(-14,-143,12,16).fillEllipse(15,-143,12,16);
+  else if(appearance.expression==='sly') face.fillStyle(0xfff2db).fillEllipse(-14,-143,10,15);
+  face.lineStyle(3,faceInk);
+  if(appearance.expression==='stern') {
+    face.fillStyle(0x273c38).fillRoundedRect(-17,-147,6,10,2).fillRoundedRect(12,-147,6,10,2);
+    face.beginPath().moveTo(-22,-155).lineTo(-8,-150).moveTo(10,-150).lineTo(23,-155).strokePath();
+    face.beginPath().moveTo(-8,-125).lineTo(10,-125).strokePath();
+  } else if(appearance.expression==='worried') {
+    face.fillStyle(0x273c38).fillEllipse(-14,-142,9,13).fillEllipse(15,-142,9,13);
+    face.beginPath().moveTo(-23,-154).lineTo(-9,-159).moveTo(10,-159).lineTo(24,-154).strokePath();
+    face.beginPath().moveTo(-8,-123).lineTo(1,-128).lineTo(10,-123).strokePath();
+  } else if(appearance.expression==='proud') {
+    face.beginPath().moveTo(-22,-148).lineTo(-8,-148).moveTo(9,-148).lineTo(23,-148).strokePath();
+    face.beginPath().moveTo(-23,-158).lineTo(-8,-161).moveTo(10,-161).lineTo(24,-158).strokePath();
+    face.beginPath().moveTo(-10,-128).lineTo(0,-122).lineTo(13,-128).strokePath();
+  } else {
+    face.fillStyle(0x273c38).fillRoundedRect(-16,-148,5,10,2);
+    face.beginPath().moveTo(10,-141).lineTo(16,-145).lineTo(22,-141).strokePath();
+    face.beginPath().moveTo(-21,-155).lineTo(-8,-157).moveTo(10,-158).lineTo(23,-153).strokePath();
+    face.beginPath().moveTo(-8,-127).lineTo(2,-124).lineTo(14,-131).strokePath();
+  }
+  const hairLayer=scene.add.graphics(); root.add(hairLayer); hairLayer.fillStyle(hair);
+  if(appearance.hairStyle==='tousled') {
+    hairLayer.fillRoundedRect(-34,-186,68,31,13).fillTriangle(-35,-160,-26,-186,-17,-150).fillTriangle(-14,-175,9,-190,8,-153).fillTriangle(7,-178,29,-182,31,-156).fillTriangle(-13,-183,0,-202,12,-181);
+  } else if(appearance.hairStyle==='short') {
+    hairLayer.fillRoundedRect(-32,-182,65,22,11).fillRect(-32,-168,7,22).fillRect(26,-168,7,22);
+  } else if(appearance.hairStyle==='curls') {
+    for(const [cx,cy,r] of [[-29,-172,13],[-20,-187,15],[0,-191,16],[21,-187,15],[32,-172,13]]) hairLayer.fillCircle(cx,cy,r);
+  } else if(appearance.hairStyle==='long') {
+    hairLayer.fillRoundedRect(-33,-186,67,26,13).fillTriangle(-33,-174,-13,-172,-30,-137).fillTriangle(5,-177,34,-173,31,-137);
+  }
+  const detail=scene.add.graphics(); root.add(detail); detail.fillStyle(hair);
+  if(appearance.detail==='beard') detail.fillTriangle(-26,-130,28,-130,2,-93).fillRoundedRect(-28,-139,10,22,4).fillRoundedRect(20,-139,10,22,4);
+  if(appearance.detail==='moustache') detail.fillEllipse(-9,-128,23,10).fillEllipse(12,-128,23,10).fillTriangle(-20,-130,-27,-122,-8,-125).fillTriangle(23,-130,29,-122,11,-125);
+  if(appearance.detail==='paint') {detail.lineStyle(5,0x6f9fcc).beginPath().moveTo(-29,-137).lineTo(-16,-131).moveTo(19,-131).lineTo(31,-137).strokePath();detail.lineStyle(3,0xf2dfac).beginPath().moveTo(-28,-129).lineTo(-18,-124).moveTo(20,-124).lineTo(30,-129).strokePath();}
   const arm = scene.add.container(ANCHORS.hand.x, ANCHORS.hand.y);
   const weapon = scene.add.graphics();
   for (const shape of weaponShapes(equipped)) {
@@ -47,7 +80,7 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   }
   const hand = scene.add.graphics();
   hand.fillStyle(color(palette.value)).fillRoundedRect(-13, -29, 19, 24, 7);
-  hand.fillStyle(0xf4c897).fillCircle(0, 0, 11);
+  hand.fillStyle(skin).fillCircle(0, 0, 11);
   arm.add([weapon, hand]);
   arm.setAngle(12);
   root.add(arm);

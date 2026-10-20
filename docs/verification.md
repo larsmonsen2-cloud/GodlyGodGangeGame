@@ -107,3 +107,19 @@ Nettleser, isolerte profiler på port 4180 (ingen brukerlagringer nullstilt):
 - Separat sluttfixture med ni seire: Kong Klask ga 230 + 125 = 355 gull, «Tronen er din!» og «Alle ti kampene er beseiret!». Ingen Neste-knapp, fortsatt Kjemp igjen og Arenaoversikt.
 
 Visuell kontroll på 390×844 og 360×640 samt 1280×900: vertikal liste uten panorering, bossintroduksjon og seiersdialog, nytt våpen og figur i adskilt spillområde. Store bosser holder seg i spillområdet. Balanse og gull/min er beregnede anslag, ikke resultater fra barne-/spillertesting. Ikke prøvd på fysisk telefon. Bakgrunnsfanepause har samme tidligere nettleserbegrensning (verktøyets faner rapporterer synlig); logikken er automatisert testet. Ingen produksjonsdeploy i denne fasen.
+
+## Fase 7 – 20. oktober 2026
+
+83 automatiserte tester består (60 eksisterende og 23 nye). Nye kontroller dekker gyldig/ugyldig kosmetikk, tilfeldig utseende, avbrutt og lagret redigering, uendret utstyr/spillverdier, hårfarge ved skallet, poengprofiler og like investeringer, nivågrenser, høyeste oppnådde trinn, dokumenterte bragder, stabile tekster, engangsvarsler og migrering. Produksjonsbygg består; bare eksisterende advarsel om stor Phaser-pakke.
+
+Nettleserkontroll på isolerte testopprinnelser på port 4181:
+- Opprettet helt med kastanjehud, blonde krøller, bekymret uttrykk, ansiktsmaling og lilla klær. Valgt magisk startvåpen og riktige startverdier ble bevart.
+- Prøvde tilfeldig utseende og Avbryt, skallet med deaktivert hårfarge, deretter langt hår, bart og stolt uttrykk. Lagre og omlasting bevarte utseendet.
+- Trening på 360×640 beholdt samme figur og tydelig regneområde med minst 44 px taster.
+- Migrert nivå 2-testhelt steg til nivå 3; neste regnestykke kom automatisk. Rykte kom først på heltesiden. To magipoeng endret profilen uten ny feiring; omlasting gjentok ikke meldingen.
+- Migrert bosstesthelt fikk nytt mørkt utseende med skjegg. Baron Buldre-seier ga vanlig gull og engangsbonus samt én integrert rykteoppdatering. Kjøpsvisningen for infernoklingen beholdt samme utseende.
+- Lange navn (20 W-er), tittel på høyeste trinn og stort våpen ble kontrollert på 360×640, samt bygger og helt på 390×844 og PC 1280×900. Ingen horisontal overskridelse på kontrollerte flater; mobilknappene Tren, Arena og Butikk ligger synlig nederst.
+
+Den eksisterende forhåndsvisningshelten på localhost:4173 ble lastet om uten nullstilling: nivå 3, XP 10/90, 25 gull, stats 5/5/40, to ledige poeng, aktiv kvist og stormstav som sparemål ble bevart. Riktig tittel ble beregnet uten historiske ryktemeldinger.
+
+Begrensninger: Ingen fysisk telefontest eller visuell gjennomgang av alle kosmetiske kombinasjoner. Isolerte høynivå-fixtures ble brukt til bosskontroll. Eksisterende begrensning ved simulering av bakgrunnsfane gjelder fortsatt. Ingen balanseendring. Fase 7 er ikke publisert.

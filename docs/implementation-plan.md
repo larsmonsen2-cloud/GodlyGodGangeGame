@@ -77,3 +77,17 @@ Presisering av fase 2: Egenskapsvalget viser bare Styrke, Magi og Helse, uten ef
 - [x] Lokal nettleserkontroll av ny helt, opplåsning, tap, boss, omkamp, butikk, nytt våpen og omlasting.
 
 Ingen push eller produksjonsdeploy for fase 6. Fase 5 ble separat publisert etter brukerens uttrykkelige bestilling.
+
+## Fase 7 – implementert lokalt
+
+- [x] Felles kosmetikkmodell med seks valgkategorier og umiddelbar figurforhåndsvisning.
+- [x] Tilfeldig utseende og midlertidig redigering med Lagre/Avbryt.
+- [x] Samme figur og aktive utstyr på helt, i trening, arena og butikk.
+- [x] Fire poengprofiler, fem varige pompøsitetstrinn og 20 deterministiske grunnmaler.
+- [x] Bragder basert på faktisk seiershistorikk; én samlet rykteoppdatering uten avbrutt trening.
+- [x] Versjon 4-migrering med bevart progresjon og trygge kosmetikkstandarder.
+- [x] Mobil- og PC-kontroll, lange navn/titler og faste spillknapper på mobil.
+- [x] 83 automatiserte tester og produksjonsbygg består.
+- [x] Spesifikasjon, regelbeskrivelse og verifisering oppdatert.
+
+Fase 5 og 6 er senere publisert etter separate bestillinger. Fase 7 er ikke pushet eller publisert.

@@ -1,11 +1,11 @@
+import { CharacterBuilder } from './CharacterBuilder';
 import { enemyById } from './enemies';
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react';
-import { CONFIG, type HeroColor } from './config';
+import { CONFIG } from './config';
 import { game } from './store';
 import { sound, bindSound } from './sound';
 import { SoundButton } from './SoundButton';
-import { type WeaponId } from './progression';
-import { HeroProgress, Progress, StorageNotice } from './HeroProgress';
+import { HeroProgress, Progress } from './HeroProgress';
 import { ArenaSelect, ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
 import { Shop } from './WeaponShop';
 import { SavingGoal } from './SavingGoal';
@@ -34,10 +34,6 @@ function Header() {
 export function App() {
   const state = useSyncExternalStore(game.subscribe, game.getSnapshot);
   const reduced = useReducedMotion();
-  const [name, setName] = useState('');
-  const [chosen, setChosen] = useState<HeroColor>('forest');
-  const [error, setError] = useState('');
-  const [weapon, setWeapon] = useState<WeaponId>('stick');
 
   useEffect(() => {
     if ((state.screen !== 'training' && state.screen !== 'arena') || state.combat?.paused || state.combat?.resultReady) return;
@@ -79,6 +75,8 @@ export function App() {
     '--reveal-time': `${CONFIG.timing.reveal}ms`,
   } as CSSProperties;
 
+  if (state.screen === 'create' || state.screen === 'appearance') return <CharacterBuilder key={state.screen} hero={state.screen === 'appearance' ? state.hero : null} draft={state.appearanceDraft} status={state.storageStatus} reduced={reduced} />;
+
   if (state.screen === 'shop' && state.hero) return <Shop hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
 
   if (state.screen === 'arena-select' && state.hero) return <ArenaSelect hero={state.hero} />;
@@ -103,7 +101,7 @@ export function App() {
       </header>
       <section className="battle-region" aria-label="Spillområde">
         {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}
-        <SceneView color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
+        <SceneView appearance={state.hero.appearance} color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
         {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><span aria-hidden="true">✦</span><div><strong>Nivå {state.levelUp}!</strong><small>Nytt egenskapspoeng</small></div></div>}
         {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
         <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>
@@ -131,53 +129,16 @@ export function App() {
           <span>{feedback === 'reveal' ? 'Neste' : feedback === 'correct' ? 'Fulltreffer!' : 'Svar'}</span><span aria-hidden="true">{feedback === 'correct' ? '✓' : '→'}</span>
         </button>
       </section>
-      {arena && state.combat && <ArenaOverlay combat={state.combat} hero={state.hero} status={state.storageStatus} />}
+      {arena && state.combat && <ArenaOverlay combat={state.combat} hero={state.hero} status={state.storageStatus} reputationNotice={state.reputationNotice} />}
     </main>;
   }
 
-  return <div className={`page-shell ${state.screen === 'hero' ? 'hero-page compact-page' : 'create-page compact-page'}`}>
+  return <div className="page-shell hero-page personal-hero-page">
     <Header />
-    <main className="home-main">
-      <div className="intro"><span className="eyebrow">SMÅ REGNESTYKKER. STORE EVENTYR.</span><h1>{state.screen === 'create' ? <>Alle helter<br />begynner et sted.</> : <>En helt.<br />En svært lovende pinne.</>}</h1><p>{state.screen === 'create' ? 'Din historie starter med en helt, en pinne og litt hjernekraft.' : 'Hvert riktige svar blir et slag. Klar for å øve?'}</p></div>
-      <div className="hero-layout">
-        <section className="portrait-panel">
-          <div className="portrait-top"><span className="eyebrow">{state.screen === 'create' ? 'DIN KOMMENDE HELT' : 'DIN HELT'}</span><span aria-hidden="true">✦</span></div>
-          <SceneView color={state.hero?.color ?? chosen} weapon={state.hero?.weapon ?? weapon} reduced={reduced} />
-          <div className="portrait-caption"><span className="little-rule" /><span>{state.hero?.name || name.trim() || 'Et eventyr venter'}</span><span className="little-rule" /></div>
-          <span className="portrait-note">Liten helt. Store ambisjoner.</span>
-        </section>
-        <section className="details-panel">
-          {state.screen === 'create' ? <form onSubmit={event => {
-            event.preventDefault();
-            if (!game.createHero(name, chosen, weapon)) setError('Gi helten et navn på 1–20 tegn.');
-          }}>
-            <h2>Lag din helt</h2>
-            <label className="name-label" htmlFor="hero-name">Heltens navn <span>{Array.from(name.trim()).length}/20</span></label>
-            <input id="hero-name" name="hero-name" value={name} autoComplete="off" placeholder="Hva skal helten hete?" aria-describedby="name-error"
-              onChange={event => { setName(event.target.value); setError(''); }} />
-            <div id="name-error" className="form-error" role="status">{error}</div>
-            <fieldset className="color-picker"><legend>Velg din farge</legend><div className="color-options">
-              {CONFIG.colors.map(c => <label key={c.id} className={`color-option ${chosen === c.id ? 'selected' : ''}`} style={{ '--swatch': c.value } as CSSProperties}>
-                <input type="radio" name="hero-color" value={c.id} checked={chosen === c.id} onChange={() => setChosen(c.id)} />
-                <span className="swatch" aria-hidden="true">{chosen === c.id ? '✓' : ''}</span><span>{c.name}</span>
-              </label>)}
-            </div></fieldset>
-            <fieldset className="weapon-picker"><legend>Velg våpen</legend><div className="weapon-options">
-              {(['stick', 'wand'] as const).map(id => <label key={id} className={weapon === id ? 'selected' : ''}>
-                <input type="radio" name="start-weapon" value={id} checked={weapon === id} onChange={() => setWeapon(id)} />
-                <span>{id === 'stick' ? 'Kampvåpen' : 'Magivåpen'}</span>
-              </label>)}
-            </div></fieldset>
-            <StorageNotice status={state.storageStatus} />
-            <button className="primary create-button" type="submit"><span>Start eventyret</span><span aria-hidden="true">→</span></button>
-          </form> : <>
-            <HeroProgress hero={state.hero!} status={state.storageStatus} />
-          </>}
-        </section>
-      </div>
-      <footer className="home-footer"><span>1–10 × 1–10</span><span>En pinne. Uendelige muligheter.</span><span>TA DET I DITT TEMPO</span></footer>
-    </main>
-    {state.equipmentNotice && <Modal title="Utstyret er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
+    <main className="home-main"><div className="hero-layout">
+      <section className="portrait-panel"><SceneView appearance={state.hero!.appearance} color={state.hero!.color} weapon={state.hero!.weapon} reduced={reduced} /></section>
+      <section className="details-panel"><HeroProgress hero={state.hero!} status={state.storageStatus} reputationNotice={state.reputationNotice} /></section>
+    </div></main>
+    {state.equipmentNotice && <Modal title="Helten er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
   </div>;
 }
-

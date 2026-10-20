@@ -1,3 +1,4 @@
+import { normalizeReputation } from '../src/reputation';
 import { describe,it,expect,vi,afterEach } from 'vitest';
 import { ENEMIES,isUnlocked,enemyById,type EnemyId } from '../src/enemies';
 import { GameStore } from '../src/store';
@@ -27,7 +28,7 @@ describe('Ten encounter progression',()=>{
  it('uses selected enemy values and defeat preserves all progress',()=>{
   const hero={...newHero('Test','sky'),defeatedEnemies:['goran'] as EnemyId[],gold:25};const {game}=setup(hero);game.selectEnemy('birger');game.startArena();
   expect(game.getSnapshot().combat?.enemyHp).toBe(110);vi.advanceTimersByTime(5000);expect(game.getSnapshot().combat?.hp).toBe(33);
-  vi.advanceTimersByTime(30000);expect(game.getSnapshot().combat?.outcome).toBe('lost');expect(game.getSnapshot().hero).toEqual(hero);game.openArena();expect(game.selectEnemy('birger')).toBe(true);game.dispose();
+  vi.advanceTimersByTime(30000);expect(game.getSnapshot().combat?.outcome).toBe('lost');expect(game.getSnapshot().hero).toEqual({...hero,reputation:normalizeReputation(hero,true)});game.openArena();expect(game.selectEnemy('birger')).toBe(true);game.dispose();
  });
  it('pays boss bonus once across duplicate input, replay and reload',()=>{
   const hero={...strong(),defeatedEnemies:ENEMIES.slice(0,4).map(e=>e.id)};const {game,storage}=setup(hero);game.selectEnemy('buldre');game.startArena();win(game);
@@ -46,7 +47,7 @@ describe('Ten encounter progression',()=>{
   expect(game.getSnapshot().combat!.id).not.toBe(old);vi.advanceTimersByTime(1200);expect(game.getSnapshot().combat).toMatchObject({enemyHp:110,resultReady:false,hp:40});vi.advanceTimersByTime(3800);expect(game.getSnapshot().combat?.hp).toBe(33);answer(game);expect(game.getSnapshot().combat?.outcome).toBe('won');game.dispose();
  });
  it.each([1,2])('migrates version %s without inferring victories from gold or level',version=>{
-  const storage=memory();const hero={...strong(),gold:999};storage.setItem(SAVE_KEY,JSON.stringify({version,hero}));const loaded=loadHero(storage);expect(loaded.hero).toEqual(hero);expect(loaded.hero?.defeatedEnemies).toEqual([]);expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(SAVE_VERSION);
+  const storage=memory();const hero={...strong(),gold:999};storage.setItem(SAVE_KEY,JSON.stringify({version,hero}));const loaded=loadHero(storage);expect(loaded.hero).toEqual({...hero,reputation:normalizeReputation(hero,true)});expect(loaded.hero?.defeatedEnemies).toEqual([]);expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(SAVE_VERSION);
  });
  it('repairs unknown ids while preserving known wins, purchases and paid bonus',()=>{
   const storage=memory();const hero={...strong(),gold:77,weapon:'iron_sword',ownedWeapons:['stick','iron_sword'],defeatedEnemies:['goran','unknown','birger'],claimedBossBonuses:['buldre','unknown']};storage.setItem(SAVE_KEY,JSON.stringify({version:3,hero}));const loaded=loadHero(storage);expect(loaded.notice).toBeTruthy();expect(loaded.hero).toMatchObject({gold:77,weapon:'iron_sword',defeatedEnemies:['goran','birger'],claimedBossBonuses:['buldre']});expect(validHero(loaded.hero)).toBe(true);

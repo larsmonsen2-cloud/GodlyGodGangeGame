@@ -109,3 +109,13 @@ Versjon 3 migrerer eldre helter og bevarer utstyr, sparemål, gull, nivå og ege
 - Spesifikasjon: `docs/arena-progression-spec.md`.
 
 Se `docs/arena-balance.md` for alle ti kamper og beregnede utfall ved 2, 5 og 8 sekunders aktiv tenketid. Modellen er kontrollert mot kampmotoren i 120 kombinasjoner. Balanseanslagene erstatter ikke spillerprøving. Fase 6 er ikke pushet eller publisert.
+
+## Fase 7 – karakterbygger og heltekrønike (lokalt)
+
+Stor forhåndsvisning med 6 hudtoner, 5 frisyrer, 6 hårfarger, 4 uttrykk, 4 ansiktsdetaljer og 6 klesfarger. Tilfeldig utseende påvirker bare kosmetikk. Endre utseende har Lagre og Avbryt og bevarer all progresjon og utstyr.
+
+Heltesiden viser en deterministisk tittel og kort krønike fra investerte poeng, fem pompøsitetstrinn og dokumenterte arenabragder. Rykte fra trening vises først ved retur til heltesiden; bossrykte inngår i seiersvisningen. Versjon 4 migrerer eksisterende helter uten gamle meldingskøer. Viktige spillknapper holdes synlige nederst på mobil.
+
+Regler, konfigurasjonssteder og migrering: [docs/character-system.md](docs/character-system.md). Full bestilling: [docs/character-spec.md](docs/character-spec.md). 83 tester og produksjonsbygg består. Lokal prøve: npm run dev, eller npm run build og npm run preview.
+
+Publiseringsstatus: fase 5 og 6 ble senere publisert etter egne bestillinger. Fase 7 er bare lokal; de eldre fasenes notater om lokal levering beskriver status ved deres opprinnelige leveranse.

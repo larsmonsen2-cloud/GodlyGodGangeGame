@@ -1,3 +1,4 @@
+import { acknowledgeReputation } from '../src/reputation';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CONFIG } from '../src/config';
 import { answersToLevel, damageFor, grantXp, newHero, spendPoint, xpNeeded } from '../src/progression';
@@ -90,7 +91,7 @@ describe('Versioned local saves', () => {
     const trained = { ...spendPoint(grantXp(hero(), 125), 'magic'), weapon: 'wand' as const, ownedWeapons: ['wand' as const], gold: 25 };
     expect(saveHero(storage, trained)).toBe('saved');
     const store = new GameStore(() => 0, storage);
-    expect(store.getSnapshot()).toMatchObject({ screen: 'hero', question: null, hero: trained });
+    expect(store.getSnapshot()).toMatchObject({ screen: 'hero', question: null, hero: acknowledgeReputation(trained) });
     store.spend('maxHealth'); store.startTraining(); store.digit('1'); store.submit();
     const reloaded = new GameStore(Math.random, storage);
     expect(reloaded.getSnapshot()).toMatchObject({ screen: 'hero', feedback: 'answering', levelUp: null, hero: { xp: 15, level: 3, points: 0, maxHealth: 50, magic: 7, weapon: 'wand', gold: 25 } });

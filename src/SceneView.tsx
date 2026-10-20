@@ -1,3 +1,4 @@
+import { DEFAULT_APPEARANCE, type Appearance } from './appearance';
 import { enemyShapes } from './enemyVisuals';
 import { enemyById, type EnemyId } from './enemies';
 import { useEffect, useRef } from 'react';
@@ -10,9 +11,9 @@ import { weaponEffectColor } from './weaponVisuals';
 import type { WeaponId } from './progression';
 import { sound } from './sound';
 
-type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; enemyId?: EnemyId; encounter?: number; reduced: boolean };
+type Props = { appearance?: Appearance; color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; enemyId?: EnemyId; encounter?: number; reduced: boolean };
 
-export function SceneView({ color, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
+export function SceneView({ color, appearance = DEFAULT_APPEARANCE, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
@@ -32,7 +33,7 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         const homeX = training ? 195 : 290;
         const homeY = training ? 352 : 450;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
-        const hero = makeHero(this, homeX, homeY, color, weapon);
+        const hero = makeHero(this, homeX, homeY, color, weapon, appearance);
         hero.root.setScale(training ? 1.03 : 1.62);
         const idle = reduced ? null : this.tweens.add({
           targets: hero.root, y: homeY - (training ? 4 : 6),
@@ -153,7 +154,7 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [color, weapon, training, arena, enemyId, encounter, reduced]);
+  }, [color, appearance, weapon, training, arena, enemyId, encounter, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
     role="img" aria-label={`${arena ? `Helten mot ${enemyById(enemyId).name}` : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
