@@ -1,22 +1,42 @@
 import { CONFIG } from './config';
 import { WEAPONS, xpNeeded, type Hero } from './progression';
 
+import { isWeaponId, isStarterId } from './weapons';
+
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid';
-export function validHero(value: unknown): value is Hero {
+function validCore(value: unknown): value is Hero {
   if (!value || typeof value !== 'object') return false;
   const h = value as Hero;
   if (typeof h.name !== 'string' || h.name !== h.name.trim() || !h.name || Array.from(h.name).length > CONFIG.maxNameLength ||
-      !CONFIG.colors.some(c => c.id === h.color) || !Object.hasOwn(WEAPONS, h.weapon)) return false;
+      !CONFIG.colors.some(c => c.id === h.color)) return false;
   if (![h.level, h.xp, h.strength, h.magic, h.maxHealth, h.points, h.gold].every(n => Number.isSafeInteger(n) && n >= 0)) return false;
   const { initial, increase } = CONFIG.progression;
   if (h.level < 1 || !Number.isSafeInteger(xpNeeded(h.level)) || h.xp >= xpNeeded(h.level) || h.strength < initial.strength || h.magic < initial.magic || h.maxHealth < initial.maxHealth) return false;
   const spent = [(h.strength - initial.strength) / increase.strength, (h.magic - initial.magic) / increase.magic, (h.maxHealth - initial.maxHealth) / increase.maxHealth];
   return spent.every(Number.isInteger) && spent.reduce((a, b) => a + b, h.points) === h.level - 1;
 }
-export function loadHero(storage: SaveStorage | null): { hero: Hero | null; status: StorageStatus } {
+export function validHero(value: unknown): value is Hero {
+  if (!validCore(value)) return false;
+  const h = value;
+  return isWeaponId(h.weapon) && Array.isArray(h.ownedWeapons) && h.ownedWeapons.length > 0 &&
+    h.ownedWeapons.every(isWeaponId) && new Set(h.ownedWeapons).size === h.ownedWeapons.length && h.ownedWeapons.includes(h.weapon) &&
+    (h.savingGoal === null || (isWeaponId(h.savingGoal) && WEAPONS[h.savingGoal].tier > 0 && !h.ownedWeapons.includes(h.savingGoal)));
+}
+function restoreEquipment(h: Hero, version: number): Hero {
+  if (version === 1) {
+    const weapon = isStarterId(h.weapon) ? h.weapon : 'stick';
+    return { ...h, weapon, ownedWeapons: [weapon], savingGoal: null };
+  }
+  const ownedWeapons = [...new Set(Array.isArray(h.ownedWeapons) ? h.ownedWeapons.filter(isWeaponId) : [])];
+  if (!ownedWeapons.length) ownedWeapons.push(isStarterId(h.weapon) ? h.weapon : 'stick');
+  const weapon = isWeaponId(h.weapon) && ownedWeapons.includes(h.weapon) ? h.weapon : ownedWeapons[0];
+  const savingGoal = isWeaponId(h.savingGoal) && WEAPONS[h.savingGoal].tier > 0 && !ownedWeapons.includes(h.savingGoal) ? h.savingGoal : null;
+  return { ...h, weapon, ownedWeapons, savingGoal };
+}
+export function loadHero(storage: SaveStorage | null): { hero: Hero | null; status: StorageStatus; notice?: string } {
   if (!storage) return { hero: null, status: 'session' };
   let raw: string | null;
   try { raw = storage.getItem(SAVE_KEY); }
@@ -24,8 +44,12 @@ export function loadHero(storage: SaveStorage | null): { hero: Hero | null; stat
   try {
     if (raw === null) return { hero: null, status: 'saved' };
     const save = JSON.parse(raw);
-    if (save?.version !== SAVE_VERSION || !validHero(save.hero)) return { hero: null, status: 'invalid' };
-    return { hero: save.hero, status: 'saved' };
+    if ((save?.version !== 1 && save?.version !== SAVE_VERSION) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
+    const hero = restoreEquipment(save.hero, save.version);
+    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : !validHero(save.hero);
+    const changed = save.version !== SAVE_VERSION || repaired;
+    return { hero, status: changed ? saveHero(storage, hero) : 'saved',
+      ...(repaired ? { notice: 'Ukjent våpenutstyr ble erstattet med et tilgjengelig våpen. Øvrig fremgang er beholdt.' } : {}) };
   } catch { return { hero: null, status: 'invalid' }; }
 }
 export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {

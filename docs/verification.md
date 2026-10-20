@@ -81,3 +81,15 @@ Den tidligere fase 1-begrensningen om at helten forsvinner ved omlasting gjelder
 
 ## Fase 4 – finpuss
 35 automatiserte tester og produksjonsbygg består. Nye lydtester dekker stille oppstart, lagret valg, umiddelbar demping, utilgjengelig lyd/lagring, avvist autoplay og engangslyd for nivå/seier. Produksjonsbygget er prøvd med lyd på, omlasting, trening, uavbrutt nivåøkning, arena, pause og seier. Ingen konsollfeil. Ett canvas ved sceneskifter. Mobiltest på 320 × 568 med synlig lyd- og pauseknapp og uten scrolling. Lydens faktiske opplevde volum/kvalitet og redusert bevegelse er ikke prøvd på fysisk telefon. Balanseverdiene er beholdt.
+
+## Fase 5 – 20. oktober 2026
+
+47 automatiserte tester består (35 eksisterende, 12 nye). Dekker nøyaktig pris, for lite gull, duplikatkjøp, automatisk utstyr, gratis bytte, negativ skadeforskjell mellom egenskaper, målbytte/fjerning, lagring/omlasting, v1-migrering for begge startvåpen, ukjente ID-er og skrivefeil. Integrasjonstesten bekrefter nytt våpens skade i trening og arena samt blokkert shopping under kamp.
+
+Produksjonsbygg fullført. Kun den eksisterende advarselen om stor Phaser-pakke. Ingen feil eller advarsler registrert i nettleserkonsollen under testen.
+
+Nettleser på isolert localhost:4173-profil: eksisterende nivå 3-helt med 50 gull og magisk startvåpen ble bevart ved migrering. Valgte jernsverd som sparemål, kjøpte for nøyaktig 50 gull, fikk 8 → 12 skade og fjernet mål. Prøvde trening (+10 XP, ingen gull), valgte stormstav som nytt mål, vant arena med sverdet på sju riktige svar, fikk 25 gull og oppdatert mål 25/125. Åpnet butikk fra seiersmålet, filtrerte eide våpen, så negativ forskjell −4 for gammel kvist, utstyrte den gratis og lastet om. Gull 25, XP 10, mål, begge eide våpen og aktiv kvist ble bevart. Brukerens helter på andre nettleseropprinnelser ble ikke nullstilt.
+
+Visuell kontroll: helteside med sparemål uten scrolling på 320×568 og 360×640; trening med 44 px taster på 320×568; butikk og kamp på 390×844; butikk i to kolonner på 1280×900. Lange navn brytes over flere linjer. Butikken scroller som tilsiktet. Ingen horisontal overskridelse på kontrollerte flater.
+
+Begrensninger: Ikke testet på fysisk telefon. Alle seks butikkillustrasjoner deler definisjon med spillet; jernsverd og startstav er prøvd i faktisk kamp/trening. De kostbare våpnene er ikke kjøpt gjennom flere timers nettleserspilling. Redusert bevegelse bruker eksisterende globale CSS- og Phaser-regler. Ingen utrulling eller push i denne fasen.

@@ -4,6 +4,11 @@ export const CONFIG = {
   maxDigits: 3,
   maxNameLength: 20,
   audio: { volume: .045, noteGap: .095, noteLength: .14 },
+  shop: {
+    tier1: { price: 50, damage: 7 },
+    tier2: { price: 125, damage: 13 },
+    tier3: { price: 250, damage: 22 },
+  },
   enemy: {
     name: 'Gøran, den lettere fornærmede slimklumpen',
     description: 'Har aldri tapt en kamp han selv har ført statistikk over.',

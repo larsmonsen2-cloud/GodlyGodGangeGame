@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SavingGoal } from './SavingGoal';
 import { SoundButton } from './SoundButton';
 import { CONFIG } from './config';
 import type { Combat } from './combat';
@@ -38,12 +39,13 @@ export function ArenaHud({ hero, combat, feedbackLocked }: { hero: Hero; combat:
   </>;
 }
 
-export function ArenaOverlay({ combat, status }: { combat: Combat; status: StorageStatus }) {
+export function ArenaOverlay({ combat, hero, status }: { combat: Combat; hero: Hero; status: StorageStatus }) {
   if (combat.resultReady) {
     const won = combat.outcome === 'won';
     return <Modal title={won ? 'Seier!' : 'Gøran vant denne gangen'} onClose={() => game.leaveTraining()}>
       <div className={`result-emblem ${won ? 'victory' : 'defeat'}`} aria-hidden="true">{won ? '✦' : '↗'}</div>
       <p className="modal-description">{won ? `Du vant ${CONFIG.enemy.gold} gull. Gøran ber om en ny opptelling.` : 'Tren litt mer og prøv igjen!'}</p>
+      {won && <SavingGoal hero={hero} actionable />}
       <StorageNotice status={status} />
       <button className="primary" onClick={() => game.startArena()}>{won ? 'Omkamp' : 'Prøv igjen'}</button>
       {!won && <button className="secondary" onClick={() => game.startTraining()}>Gå til trening</button>}

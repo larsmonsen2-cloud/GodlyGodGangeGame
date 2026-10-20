@@ -87,7 +87,7 @@ describe('Versioned local saves', () => {
   it('restores all progress on the hero screen, never a pending question', () => {
     vi.useFakeTimers();
     const storage = memory();
-    const trained = { ...spendPoint(grantXp(hero(), 125), 'magic'), weapon: 'wand' as const, gold: 25 };
+    const trained = { ...spendPoint(grantXp(hero(), 125), 'magic'), weapon: 'wand' as const, ownedWeapons: ['wand' as const], gold: 25 };
     expect(saveHero(storage, trained)).toBe('saved');
     const store = new GameStore(() => 0, storage);
     expect(store.getSnapshot()).toMatchObject({ screen: 'hero', question: null, hero: trained });
@@ -115,3 +115,4 @@ describe('Versioned local saves', () => {
     store.dispose();
   });
 });
+

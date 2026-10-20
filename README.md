@@ -82,3 +82,15 @@ Velg Arena på heltesiden og deretter Start kamp. Riktige svar angriper. Fienden
 
 
 Fase 4: Treff og magi har fargede treffringer og gnister, Gøran synker sammen ved seier, og resultatet får et seiersmerke. `src/sound.ts` lager korte Web Audio-toner uten lydfiler eller eksterne tjenester. Nettleserens lydrestriksjoner håndteres uten å blokkere spill. Ingen tale eller bakgrunnsmusikk. Lydnivå og toner justeres i `CONFIG.audio` og `sound.ts`; effekttider i `CONFIG.timing`.
+
+## Fase 5 – våpenbutikk (lokalt implementert)
+
+Våpensmeden åpnes fra heltesiden. Seks kjøpbare våpen, filter for nærkamp/magi og en oversikt over eide våpen. Kjøp trekker gull én gang, beholder gammelt utstyr, utstyrer det nye våpenet og lagrer samlet. Eide våpen kan utstyres gratis. Bare valgt startvåpen gis ved opprettelse. Alle kjøpbare trinn kan kjøpes direkte når man har råd.
+
+Butikken viser faktisk skade og positiv/negativ forskjell mot aktivt våpen. Kjøpsvisningen viser helten, gammel → ny skade og direkte valg om å trene eller handle videre. Felles geometriske våpendefinisjoner brukes i SVG-kortene og Phaser-helten. Ett valgfritt sparemål lagres og vises på heltesiden, etter seier og i spillområdet på høye skjermer (minst 800 px). Under spill er målet kun informasjon.
+
+Lagringsversjon 2 migrerer gamle helter og registrerer bare eksisterende startvåpen som eid. Ukjente utstyrsreferanser repareres med varsel uten å kaste øvrig fremgang. Lydinnstilling ligger separat og beholdes. Ingen endring av XP, gullbelønning eller arenabalanse.
+
+Endringssteder: `src/weapons.ts` (katalog/navn/type), `src/config.ts` → `shop` (priser og skade), `src/weaponVisuals.ts` (felles former og effektfarger), `src/shop.ts` (kjøpsregler), `src/storage.ts` (migrering).
+
+Test lokalt: `npm run dev` eller `npm run build` og `npm run preview`. Fase 5 er ikke pushet eller publisert til Vercel.

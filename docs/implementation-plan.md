@@ -51,3 +51,15 @@ Treffringer og gnister, egen magifarge, Gørans nederlagsanimasjon og seiersmerk
 
 
 Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», med oppdatert figurforhåndsvisning. Valget lagres og kan ikke byttes på heltesiden. Eksisterende helter beholder valgt våpen. Nivåøkning vises som et kort merke øverst i treningen uten dialog eller ekstra trykk; neste gangestykke er umiddelbart tilgjengelig etter vanlig svarrespons. Poeng kan fordeles ved senere besøk på heltesiden.
+
+## Fase 5 – implementert lokalt
+
+- [x] Seks datadrevne kjøpbare våpen med egne silhuetter, priser og skadeverdier.
+- [x] Atomisk kjøp, automatisk utstyr, beskyttelse mot dobbeltkjøp og gratis gjenutstyr.
+- [x] Butikk med filtre, eierskap, faktisk skadesammenligning og kjøpsvisning.
+- [x] Ett lagret sparemål på helt, etter seier og på høye spillflater.
+- [x] Lagringsversjon 2 med migrering og reparasjon av ukjente utstyrsreferanser.
+- [x] 47 tester består, produksjonsbygg fullført og lokal nettleserløkke kontrollert.
+- [x] Lokal leveranse; ingen push eller utrulling av fase 5.
+
+Presisering av fase 2: Egenskapsvalget viser bare Styrke, Magi og Helse, uten effektforhåndsvisning. Bare ett startvåpen gis; senere bytte skjer via eide våpen i butikken.

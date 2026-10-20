@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CONFIG, type HeroColor } from './config';
+import { weaponShapes } from './weaponVisuals';
 import type { WeaponId } from './progression';
 
 // Original vector artwork. All screens use this same rig and attachment points.
@@ -38,15 +39,11 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   body.lineStyle(2.5, 0x935940).beginPath().moveTo(-5, -127).lineTo(2, -124).lineTo(10, -128).strokePath();
   const arm = scene.add.container(ANCHORS.hand.x, ANCHORS.hand.y);
   const weapon = scene.add.graphics();
-  // The stick is its own part, attached to the hand. No rules depend on its art.
-  weapon.lineStyle(11, 0x674a31).beginPath().moveTo(0, 19).lineTo(3, -73).strokePath();
-  weapon.lineStyle(5, 0xb28a53).beginPath().moveTo(-1, 14).lineTo(1, -72).strokePath();
-  weapon.lineStyle(5, 0x88613b).beginPath().moveTo(2, -48).lineTo(15, -61).strokePath();
-  weapon.fillStyle(0x9db36c).fillEllipse(15, -65, 16, 8);
-  if (equipped === 'wand') {
-    weapon.fillStyle(0x9f92ef, .25).fillCircle(2, -79, 23);
-    weapon.fillStyle(0xaaa0ff).fillTriangle(2, -101, -10, -79, 2, -62).fillTriangle(2, -101, 14, -79, 2, -62);
-    weapon.fillStyle(0xe5e0ff).fillTriangle(2, -96, -6, -79, 2, -69);
+  for (const shape of weaponShapes(equipped)) {
+    weapon.fillStyle(color(shape.fill), shape.opacity ?? 1);
+    if (shape.type === 'polygon') weapon.fillPoints(shape.points.map(([x, y]) => ({ x, y })), true);
+    else if (shape.type === 'ellipse') weapon.fillEllipse(shape.x, shape.y, shape.width, shape.height);
+    else weapon.fillRect(shape.x, shape.y, shape.width, shape.height);
   }
   const hand = scene.add.graphics();
   hand.fillStyle(color(palette.value)).fillRoundedRect(-13, -29, 19, 24, 7);

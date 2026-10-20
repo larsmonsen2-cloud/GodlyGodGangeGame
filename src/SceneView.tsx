@@ -3,6 +3,8 @@ import Phaser from 'phaser';
 import { makeBackground, makeDummy, makeHero, makeSlime } from './art';
 import { CONFIG, type HeroColor } from './config';
 import { game, type Attack } from './store';
+import { WEAPONS } from './weapons';
+import { weaponEffectColor } from './weaponVisuals';
 import type { WeaponId } from './progression';
 import { sound } from './sound';
 
@@ -35,7 +37,7 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: .96, scaleX: 1.04, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
         const hit = (event: Attack) => {
           if (!game.getSnapshot().combat?.paused) sound.play('hit');
-          const impactColor = event.kind === 'magic' ? 0xc6b5ff : 0xffdf8b;
+          const impactColor = weaponEffectColor(weapon);
           const ring = this.add.circle(527, 240, 24).setStrokeStyle(4, impactColor);
           const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
           if (defeated) {
@@ -69,8 +71,8 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
             sound.play('magic');
             const projectile = this.add.container(reduced ? 510 : 244, 217);
             const glow = this.add.graphics();
-            glow.fillStyle(0xa591ff, .25).fillCircle(0, 0, 25);
-            glow.fillStyle(0xb6a6ff).fillCircle(0, 0, 12);
+            glow.fillStyle(weaponEffectColor(weapon), .25).fillCircle(0, 0, 25);
+            glow.fillStyle(weaponEffectColor(weapon)).fillCircle(0, 0, 12);
             glow.fillStyle(0xf1e8ff).fillCircle(-3, -3, 6);
             projectile.add(glow);
             if (reduced) {
@@ -138,5 +140,5 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
   }, [color, weapon, training, arena, encounter, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
-    role="img" aria-label={`${arena ? 'Helten mot slimklumpen Gøran' : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${weapon === 'wand' ? 'en lysende magisk kvist' : 'en ambisiøs trepinne'}.`} />;
+    role="img" aria-label={`${arena ? 'Helten mot slimklumpen Gøran' : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
 }

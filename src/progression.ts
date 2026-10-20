@@ -1,20 +1,18 @@
 import { CONFIG, type HeroColor } from './config';
-
-export const WEAPONS = {
-  stick: { ...CONFIG.weapon, stat: 'strength', kind: 'melee', label: 'Pinne · nærkamp' },
-  wand: { ...CONFIG.magicWeapon, stat: 'magic', kind: 'magic', label: 'Kvist · magi' },
-} as const;
-export type WeaponId = keyof typeof WEAPONS;
+import { WEAPONS, type WeaponId, type StarterId } from './weapons';
+export { WEAPONS, type WeaponId } from './weapons';
 export type Attribute = 'strength' | 'magic' | 'maxHealth';
 export type Hero = {
   name: string; color: HeroColor; level: number; xp: number;
   strength: number; magic: number; maxHealth: number; points: number;
   weapon: WeaponId; gold: number;
+  ownedWeapons: WeaponId[];
+  savingGoal: WeaponId | null;
 };
 export const xpNeeded = (level: number) => CONFIG.progression.baseXp + CONFIG.progression.xpStep * (level - 1);
 export const damageFor = (hero: Hero, weapon: WeaponId = hero.weapon) => hero[WEAPONS[weapon].stat] + WEAPONS[weapon].damage;
 export const answersToLevel = (hero: Hero) => Math.ceil((xpNeeded(hero.level) - hero.xp) / CONFIG.progression.xpPerAnswer);
-export const newHero = (name: string, color: HeroColor): Hero => ({ name, color, ...CONFIG.progression.initial, weapon: 'stick' });
+export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick'): Hero => ({ name, color, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null });
 export function grantXp(hero: Hero, amount: number): Hero {
   if (!Number.isSafeInteger(amount) || amount < 0) return hero;
   let { level, xp, points } = hero;

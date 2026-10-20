@@ -6,6 +6,9 @@ import { SoundButton } from './SoundButton';
 import { type WeaponId } from './progression';
 import { HeroProgress, Progress, StorageNotice } from './HeroProgress';
 import { ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
+import { Shop } from './WeaponShop';
+import { SavingGoal } from './SavingGoal';
+import { Modal } from './HeroProgress';
 import { SceneView } from './SceneView';
 import { makeKeyboardController } from './keyboard';
 
@@ -75,6 +78,8 @@ export function App() {
     '--reveal-time': `${CONFIG.timing.reveal}ms`,
   } as CSSProperties;
 
+  if (state.screen === 'shop' && state.hero) return <Shop hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
+
   if (state.screen === 'arena-intro' && state.hero) return <ArenaIntro hero={state.hero} reduced={reduced} />;
 
   if ((state.screen === 'training' || state.screen === 'arena') && state.hero && state.question) {
@@ -87,7 +92,7 @@ export function App() {
       : feedback === 'reveal' ? 'Riktig svar · Ta den tiden du trenger.'
       : wrong ? (feedback === 'first-error' ? 'Ikke helt. Prøv én gang til!' : 'Vi ser på svaret sammen.')
       : mistakes ? 'Du klarer det. Prøv igjen!' : 'Regn ut og send helten i angrep.';
-    return <main className={`training-shell ${arena ? 'arena-shell' : ''}`} style={timings}>
+    return <main className={`training-shell ${arena ? 'arena-shell' : ''} ${state.hero.savingGoal ? 'has-saving-goal' : ''}`} style={timings}>
       <header className="training-header">
         <button type="button" className="back-button" onClick={() => game.leaveTraining()} aria-label="Tilbake til helten">← <span>Helten</span></button>
         <div className="training-title"><span className="eyebrow">{arena ? 'SLIMARENAEN' : 'SKOGLYSNINGEN'}</span><h1>{arena ? 'Kamp mot Gøran' : 'Treningsplassen'}</h1></div>
@@ -98,6 +103,7 @@ export function App() {
         <SceneView color={state.hero.color} weapon={state.hero.weapon} training arena={arena} encounter={state.combat?.id} reduced={reduced} />
         {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><span aria-hidden="true">✦</span><div><strong>Nivå {state.levelUp}!</strong><small>Nytt egenskapspoeng</small></div></div>}
         {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
+        <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>
       </section>
       <section className={`math-region feedback-${feedback}`} aria-label="Regneområde">
         <div className="math-heading"><span className="eyebrow">DIN TUR</span><span>Den lille gangetabellen</span></div>
@@ -122,7 +128,7 @@ export function App() {
           <span>{feedback === 'reveal' ? 'Neste' : feedback === 'correct' ? 'Fulltreffer!' : 'Svar'}</span><span aria-hidden="true">{feedback === 'correct' ? '✓' : '→'}</span>
         </button>
       </section>
-      {arena && state.combat && <ArenaOverlay combat={state.combat} status={state.storageStatus} />}
+      {arena && state.combat && <ArenaOverlay combat={state.combat} hero={state.hero} status={state.storageStatus} />}
     </main>;
   }
 
@@ -168,5 +174,7 @@ export function App() {
       </div>
       <footer className="home-footer"><span>1–10 × 1–10</span><span>En pinne. Uendelige muligheter.</span><span>TA DET I DITT TEMPO</span></footer>
     </main>
+    {state.equipmentNotice && <Modal title="Utstyret er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
   </div>;
 }
+

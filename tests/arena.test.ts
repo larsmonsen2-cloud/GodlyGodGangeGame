@@ -111,7 +111,7 @@ describe('Arena combat', () => {
   });
   it('uses trained magic and health without scaling the enemy or spending mid-fight', () => {
     game.dispose();
-    let hero = grantXp(newHero('Sol', 'sky'), 120);
+    let hero = grantXp(newHero('Sol', 'sky', 'wand'), 120);
     hero = spendPoint(spendPoint(hero, 'magic'), 'maxHealth');
     saveHero(storage, { ...hero, weapon: 'wand' });
     game = new GameStore(() => 0, storage); game.openArena(); game.startArena();
@@ -128,3 +128,4 @@ describe('Arena combat', () => {
     clock.reset();
   });
 });
+
