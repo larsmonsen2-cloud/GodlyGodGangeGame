@@ -4,6 +4,7 @@ import { makeBackground, makeDummy, makeHero, makeSlime } from './art';
 import { CONFIG, type HeroColor } from './config';
 import { game, type Attack } from './store';
 import type { WeaponId } from './progression';
+import { sound } from './sound';
 
 type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; encounter?: number; reduced: boolean };
 
@@ -33,13 +34,29 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         const dummy = arena ? makeSlime(this, 530, homeY) : makeDummy(this, 530, homeY);
         if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: .96, scaleX: 1.04, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
         const hit = (event: Attack) => {
+          if (!game.getSnapshot().combat?.paused) sound.play('hit');
+          const impactColor = event.kind === 'magic' ? 0xc6b5ff : 0xffdf8b;
+          const ring = this.add.circle(527, 240, 24).setStrokeStyle(4, impactColor);
+          const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
+          if (defeated) {
+            this.tweens.killTweensOf(dummy);
+            if (reduced) dummy.setAlpha(.4);
+            else this.tweens.add({ targets: dummy, scaleY: .22, scaleX: 1.18, alpha: .4, duration: CONFIG.timing.defeat, ease: 'Sine.out' });
+          }
           const text = this.add.text(527, 135, `−${event.damage}`, {
             fontFamily: 'Georgia, serif', fontSize: '44px', fontStyle: 'bold',
             color: '#fff3b9', stroke: '#473a2c', strokeThickness: 5,
           }).setOrigin(.5);
           if (reduced) {
+            this.time.delayedCall(CONFIG.timing.impact, () => ring.destroy());
             this.time.delayedCall(CONFIG.timing.damageFloat, () => text.destroy());
             return;
+          }
+          this.tweens.add({ targets: ring, scale: 2, alpha: 0, duration: CONFIG.timing.impact, onComplete: () => ring.destroy() });
+          for (let i = 0; i < 6; i++) {
+            const angle = i * Math.PI / 3;
+            const spark = this.add.circle(527, 240, 4, impactColor);
+            this.tweens.add({ targets: spark, x: 527 + Math.cos(angle) * 60, y: 240 + Math.sin(angle) * 48, alpha: 0, duration: CONFIG.timing.impact, onComplete: () => spark.destroy() });
           }
           this.tweens.add({ targets: text, y: 87, alpha: 0, duration: CONFIG.timing.damageFloat, ease: 'Cubic.out', onComplete: () => text.destroy() });
           this.tweens.add({ targets: dummy, angle: 9, duration: CONFIG.timing.hit, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
@@ -49,6 +66,7 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         };
         const unsubscribe = game.onAttack(event => {
           if (event.kind === 'magic') {
+            sound.play('magic');
             const projectile = this.add.container(reduced ? 510 : 244, 217);
             const glow = this.add.graphics();
             glow.fillStyle(0xa591ff, .25).fillCircle(0, 0, 25);
@@ -76,6 +94,7 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
           });
         });
         const offEnemy = arena ? game.onEnemyAttack(damage => {
+          sound.play('hurt');
           const text = this.add.text(homeX, 135, `−${damage}`, { fontFamily: 'Georgia, serif', fontSize: '44px', color: '#ffd4b8', stroke: '#473a2c', strokeThickness: 5 }).setOrigin(.5);
           if (reduced) this.time.delayedCall(CONFIG.timing.damageFloat, () => text.destroy());
           else {

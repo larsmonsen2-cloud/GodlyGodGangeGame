@@ -1,4 +1,4 @@
-# Gangriket – fase 3
+# Gangriket – fase 4
 
 Et mobilvennlig fantasyspill for den lille gangetabellen. Lag en helt, velg klær, besøk heltesiden og tren mot en svært tålmodig dummy.
 
@@ -36,9 +36,9 @@ npm run preview
 - Eget talltastatur og fysisk tastatur: tall, Backspace og Enter. Ingen automatisk innsending.
 - Redusert bevegelse følger operativsystemets innstilling.
 
-Fase 1, 2 og 3 er implementert. Riktige svar gir 10 XP. Nivåer gir ett egenskapspoeng; spilleren velger +2 styrke, +2 magi eller +10 maks liv. Gratis pinne og magisk kvist skalerer med hver sin egenskap. Ingen automatisk skadeøkning ved nivåøkning.
+Fase 1–4 er implementert. Riktige svar gir 10 XP. Nivåer gir ett egenskapspoeng; spilleren velger +2 styrke, +2 magi eller +10 maks liv. Gratis pinne og magisk kvist skalerer med hver sin egenskap. Ingen automatisk skadeøkning ved nivåøkning.
 
-Helten lagres automatisk i denne nettleseren på denne enheten. Omlasting åpner heltesiden med beholdt fremgang. Ingen synkronisering mellom telefon og PC. Blokkert lagring varsles, og ugyldige lagringsdata gir en ny opprettelsesside uten krasj. Arenaen har Gøran med 80 liv, 6 skade per fem sekunder og 25 gull per seier. Gull lagres og vises på heltesiden. Arena gir ingen XP. Lyd er ikke implementert.
+Helten lagres automatisk i denne nettleseren på denne enheten. Omlasting åpner heltesiden med beholdt fremgang. Ingen synkronisering mellom telefon og PC. Blokkert lagring varsles, og ugyldige lagringsdata gir en ny opprettelsesside uten krasj. Arenaen har Gøran med 80 liv, 6 skade per fem sekunder og 25 gull per seier. Gull lagres og vises på heltesiden. Arena gir ingen XP. Korte lydeffekter kan slås på og av. Lyd er av som standard, og valget huskes i nettleseren.
 
 ## Kode og justering
 
@@ -79,3 +79,6 @@ Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», me
 Velg Arena på heltesiden og deretter Start kamp. Riktige svar angriper. Fiendens klokke stopper under svarrespons, feilrist og fasit. Pause eller skjult fane stanser kampen til spilleren aktivt fortsetter. Seier gir gull én gang; nederlag fjerner ikke fremgang. Omkamp starter med fullt liv. Omlasting avslutter kampen og åpner heltesiden.
 
 `src/combat.ts` styrer fiendens tidsfrist. `src/store.ts` avgjør skade og utfall. Ved likt tidspunkt prioriteres et allerede forfalt fiendeangrep foran et innsendt svar. Forsinkede timere samler ikke opp en serie bakgrunnsangrep. Kampstatus lagres aldri. Balansen står i `CONFIG.enemy`.
+
+
+Fase 4: Treff og magi har fargede treffringer og gnister, Gøran synker sammen ved seier, og resultatet får et seiersmerke. `src/sound.ts` lager korte Web Audio-toner uten lydfiler eller eksterne tjenester. Nettleserens lydrestriksjoner håndteres uten å blokkere spill. Ingen tale eller bakgrunnsmusikk. Lydnivå og toner justeres i `CONFIG.audio` og `sound.ts`; effekttider i `CONFIG.timing`.

@@ -77,3 +77,7 @@ Den tidligere fase 1-begrensningen om at helten forsvinner ved omlasting gjelder
 - Arena, helse og angrepsmåler er isolert fra regneområdet. På 360 × 640 og 320 × 568 samsvarer områdenes kanter; Svar-knappen ligger innenfor skjermen. Tallknapper er minst 44 px høye. Heltesiden med Tren og Arena får også plass på 320 × 568.
 - Automatisk pause på `visibilitychange` er implementert med krav om Fortsett. In-app-testnettleseren rapporterte fortsatt fanen som synlig etter åpning av en annen fane, så faktisk bakgrunnsbytte på fysisk telefon er ikke verifisert her. Pausemekanismen og at svarrespons ikke opphever pausen er dekket av tester.
 - Fremdeles ingen fysisk telefontest, lyd, butikk eller fase 4. Pågående kamper lagres ikke. Gull er opptjent og lagret; bruk av gull kommer i en senere fase.
+
+
+## Fase 4 – finpuss
+35 automatiserte tester og produksjonsbygg består. Nye lydtester dekker stille oppstart, lagret valg, umiddelbar demping, utilgjengelig lyd/lagring, avvist autoplay og engangslyd for nivå/seier. Produksjonsbygget er prøvd med lyd på, omlasting, trening, uavbrutt nivåøkning, arena, pause og seier. Ingen konsollfeil. Ett canvas ved sceneskifter. Mobiltest på 320 × 568 med synlig lyd- og pauseknapp og uten scrolling. Lydens faktiske opplevde volum/kvalitet og redusert bevegelse er ikke prøvd på fysisk telefon. Balanseverdiene er beholdt.

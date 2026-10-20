@@ -22,7 +22,7 @@ Gjeldende krav er hele den innsendte spesifikasjonen i `game-spec.md`.
 
 Spillet er publisert på https://godly-god-gange-game.vercel.app/ via GitHub og Vercel. Åpningsside og helteside er komprimert uten scrolling på små mobiler.
 
-Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå bestilt fase 2. Brukeren har også bestilt fase 3. Fase 4 avventer ny bestilling.
+Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå bestilt fase 2. Brukeren har også bestilt fase 3. Brukeren har også bestilt fase 4.
 
 ## Fase 2 – implementert
 
@@ -45,9 +45,9 @@ Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå b
 - [x] Ingen lagring av aktiv kamp; gamle timere og animasjoner ryddes ved ny kamp.
 - [x] 30 automatiserte tester og kontroll av produksjonsbygget i nettleseren.
 
-## Fase 4 – ikke påbegynt
+## Fase 4 – implementert
 
-Videre finpuss etter spilling, eventuell lyd med av/på og balansering av de implementerte systemene.
+Treffringer og gnister, egen magifarge, Gørans nederlagsanimasjon og seiersmerke. Korte syntetiserte lyder for treff, magi, skade, nivå og seier; av som standard, med lagret av/på-valg. Lydfeil påvirker aldri spillregler. Redusert bevegelse beholdes. 35 tester består, og trening, nivåøkning, pause, arena og seier er prøvd i nettleseren. Eksisterende balanseverdier er beholdt; videre balansering bør bygge på brukerens spilling.
 
 
 Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», med oppdatert figurforhåndsvisning. Valget lagres og kan ikke byttes på heltesiden. Eksisterende helter beholder valgt våpen. Nivåøkning vises som et kort merke øverst i treningen uten dialog eller ekstra trykk; neste gangestykke er umiddelbart tilgjengelig etter vanlig svarrespons. Poeng kan fordeles ved senere besøk på heltesiden.

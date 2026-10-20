@@ -1,6 +1,8 @@
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { CONFIG, type HeroColor } from './config';
 import { game } from './store';
+import { sound, bindSound } from './sound';
+import { SoundButton } from './SoundButton';
 import { type WeaponId } from './progression';
 import { HeroProgress, Progress, StorageNotice } from './HeroProgress';
 import { ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
@@ -22,7 +24,7 @@ function Mark() {
   return <span className="brand-mark" aria-hidden="true">×</span>;
 }
 function Header() {
-  return <header className="site-header"><a className="brand" href="./" aria-label="Gangriket, heltesiden"><Mark />Gangriket<span className="brand-dot">✦</span></a><span className="edition">ET LITE REGNEEVENTYR</span></header>;
+  return <header className="site-header"><a className="brand" href="./" aria-label="Gangriket, heltesiden"><Mark />Gangriket<span className="brand-dot">✦</span></a><SoundButton /></header>;
 }
 
 export function App() {
@@ -52,6 +54,21 @@ export function App() {
     return () => document.removeEventListener('visibilitychange', visibility);
   }, []);
 
+  useEffect(() => {
+    const off = bindSound(game, sound);
+    const unlock = () => { void sound.unlock(); };
+    const hush = () => { if (document.hidden) sound.stop(); };
+    window.addEventListener('pointerdown', unlock, true);
+    window.addEventListener('keydown', unlock, true);
+    document.addEventListener('visibilitychange', hush);
+    return () => {
+      off(); sound.stop();
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+      document.removeEventListener('visibilitychange', hush);
+    };
+  }, []);
+
   const timings = {
     '--correct-time': `${CONFIG.timing.correctPulse}ms`,
     '--wrong-time': `${CONFIG.timing.wrong}ms`,
@@ -74,7 +91,7 @@ export function App() {
       <header className="training-header">
         <button type="button" className="back-button" onClick={() => game.leaveTraining()} aria-label="Tilbake til helten">← <span>Helten</span></button>
         <div className="training-title"><span className="eyebrow">{arena ? 'SLIMARENAEN' : 'SKOGLYSNINGEN'}</span><h1>{arena ? 'Kamp mot Gøran' : 'Treningsplassen'}</h1></div>
-        {arena ? <button className="pause-button" disabled={state.combat?.outcome !== 'active'} onClick={() => game.pauseArena()}>Pause</button> : <span className="small-mark" aria-hidden="true">×</span>}
+        <div className="play-controls"><SoundButton />{arena ? <button className="pause-button" disabled={state.combat?.outcome !== 'active'} onClick={() => game.pauseArena()}>Pause</button> : null}</div>
       </header>
       <section className="battle-region" aria-label="Spillområde">
         {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}

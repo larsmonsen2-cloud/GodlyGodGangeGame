@@ -3,6 +3,7 @@ export const CONFIG = {
   maxFactor: 10,
   maxDigits: 3,
   maxNameLength: 20,
+  audio: { volume: .045, noteGap: .095, noteLength: .14 },
   enemy: {
     name: 'Gøran, den lettere fornærmede slimklumpen',
     description: 'Har aldri tapt en kamp han selv har ført statistikk over.',
@@ -41,6 +42,8 @@ export const CONFIG = {
     idle: 1500,
     projectile: 340,
     levelBanner: 2400,
+    impact: 320,
+    defeat: 450,
   },
   colors: [
     { id: 'forest', name: 'Skoggrønn', value: '#69b89a', dark: '#397d68' },

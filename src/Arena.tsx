@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SoundButton } from './SoundButton';
 import { CONFIG } from './config';
 import type { Combat } from './combat';
 import type { Hero } from './progression';
@@ -9,7 +10,7 @@ import type { StorageStatus } from './storage';
 
 export function ArenaIntro({ hero, reduced }: { hero: Hero; reduced: boolean }) {
   return <main className="arena-intro">
-    <button className="back-button" onClick={() => game.leaveTraining()}>← Helten</button>
+    <div className="intro-toolbar"><button className="back-button" onClick={() => game.leaveTraining()}>← Helten</button><SoundButton /></div>
     <span className="eyebrow">DIN FØRSTE ARENA</span>
     <h1>Gøran</h1><p className="enemy-title">Den lettere fornærmede slimklumpen</p>
     <div className="arena-preview"><SceneView color={hero.color} weapon={hero.weapon} training arena reduced={reduced} /></div>
@@ -41,6 +42,7 @@ export function ArenaOverlay({ combat, status }: { combat: Combat; status: Stora
   if (combat.resultReady) {
     const won = combat.outcome === 'won';
     return <Modal title={won ? 'Seier!' : 'Gøran vant denne gangen'} onClose={() => game.leaveTraining()}>
+      <div className={`result-emblem ${won ? 'victory' : 'defeat'}`} aria-hidden="true">{won ? '✦' : '↗'}</div>
       <p className="modal-description">{won ? `Du vant ${CONFIG.enemy.gold} gull. Gøran ber om en ny opptelling.` : 'Tren litt mer og prøv igjen!'}</p>
       <StorageNotice status={status} />
       <button className="primary" onClick={() => game.startArena()}>{won ? 'Omkamp' : 'Prøv igjen'}</button>
