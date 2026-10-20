@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { CONFIG, type HeroColor } from './config';
+import type { WeaponId } from './progression';
 
 // Original vector artwork. All screens use this same rig and attachment points.
 export const ANCHORS = { head: { x: 0, y: -139 }, hand: { x: 38, y: -84 }, shield: { x: -34, y: -83 }, helmet: { x: 0, y: -173 } };
 const color = (hex: string) => Phaser.Display.Color.HexStringToColor(hex).color;
 
-export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: HeroColor) {
+export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: HeroColor, equipped: WeaponId = 'stick') {
   const palette = CONFIG.colors.find(c => c.id === chosen)!;
   const root = scene.add.container(x, y);
   const body = scene.add.graphics();
@@ -42,6 +43,11 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   weapon.lineStyle(5, 0xb28a53).beginPath().moveTo(-1, 14).lineTo(1, -72).strokePath();
   weapon.lineStyle(5, 0x88613b).beginPath().moveTo(2, -48).lineTo(15, -61).strokePath();
   weapon.fillStyle(0x9db36c).fillEllipse(15, -65, 16, 8);
+  if (equipped === 'wand') {
+    weapon.fillStyle(0x9f92ef, .25).fillCircle(2, -79, 23);
+    weapon.fillStyle(0xaaa0ff).fillTriangle(2, -101, -10, -79, 2, -62).fillTriangle(2, -101, 14, -79, 2, -62);
+    weapon.fillStyle(0xe5e0ff).fillTriangle(2, -96, -6, -79, 2, -69);
+  }
   const hand = scene.add.graphics();
   hand.fillStyle(color(palette.value)).fillRoundedRect(-13, -29, 19, 24, 7);
   hand.fillStyle(0xf4c897).fillCircle(0, 0, 11);

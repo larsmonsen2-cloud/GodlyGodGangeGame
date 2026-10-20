@@ -1,4 +1,4 @@
-# Gangriket – fase 1
+# Gangriket – fase 2
 
 Et mobilvennlig fantasyspill for den lille gangetabellen. Lag en helt, velg klær, besøk heltesiden og tren mot en svært tålmodig dummy.
 
@@ -26,7 +26,7 @@ npm run preview
 ## Dette er med
 
 - Navn på 1–20 tegn etter trimming, tre klesfarger og stor forhåndsvisning.
-- Helteside med samme figur, startvåpenet og 8 skade (styrke 5 + våpen 3).
+- Kompakt helteside med nivå, XP, styrke, magi, maks liv, poeng, våpenvalg og beregnet skade.
 - Phaser-scene med egenprodusert skog, leddelt helt, trepinne, angrep, treff og skadetall.
 - React-grensesnitt med tydelig skille mellom spill og regning.
 - Uavhengige tilfeldige faktorer fra 1 til 10. Identiske oppgaver etter hverandre er tillatt.
@@ -36,7 +36,9 @@ npm run preview
 - Eget talltastatur og fysisk tastatur: tall, Backspace og Enter. Ingen automatisk innsending.
 - Redusert bevegelse følger operativsystemets innstilling.
 
-Kun fase 1 er implementert. Helten beholdes ved navigasjon, men forsvinner ved omlasting. Det finnes ingen XP, nivåer, egenskapspoeng, magi, lagring, arena, gull eller lyd.
+Fase 1 og 2 er implementert. Riktige svar gir 10 XP. Nivåer gir ett egenskapspoeng; spilleren velger +2 styrke, +2 magi eller +10 maks liv. Gratis pinne og magisk kvist skalerer med hver sin egenskap. Ingen automatisk skadeøkning ved nivåøkning.
+
+Helten lagres automatisk i denne nettleseren på denne enheten. Omlasting åpner heltesiden med beholdt fremgang. Ingen synkronisering mellom telefon og PC. Blokkert lagring varsles, og ugyldige lagringsdata gir en ny opprettelsesside uten krasj. Gull starter på 0 og lagres, men opptjening og visning kommer med arena i fase 3. Arena og lyd er ikke implementert.
 
 ## Kode og justering
 
@@ -44,6 +46,9 @@ Kun fase 1 er implementert. Helten beholdes ved navigasjon, men forsvinner ved o
 | --- | --- |
 | `src/config.ts` | Alle svartider, animasjonstider, farger, startstyrke og våpendata |
 | `src/store.ts` | Én autoritativ spilltilstand, svarbehandling, oppgave-ID-er, engangsangrep og kansellering av tidtakere |
+| `src/progression.ts` | XP, nivåer, poeng og datadrevet våpenskade |
+| `src/storage.ts` | Versjonert og validert lokal lagring |
+| `src/HeroProgress.tsx` | Helteverdier, XP, våpenvalg og tilgjengelige dialoger |
 | `src/questions.ts` | Uavhengig tilfeldig trekking og normalisering av svar |
 | `src/keyboard.ts` | Tastetrykk, gjentakelser og krav om å slippe Enter |
 | `src/art.ts` | Felles figurdefinisjon, separate kropp/våpendeler og festepunkter |
@@ -64,4 +69,4 @@ Se `docs/verification.md` for utførte kontroller og begrensninger, og `docs/imp
 Prosjektet har `vercel.json` med Vite, `npm ci`, `npm run build` og outputmappen `dist`.
 Bruk prosjektmappen som roten i GitHub-repositoriet og importer repositoriet i Vercel.
 Ingen miljøvariabler eller backend er nødvendige. Velg en støttet Node.js-versjon på minst 22.12.
-Vercel-publisering er neste steg. Importer `larsmonsen2-cloud/GodlyGodGangeGame` med prosjektroten `./`.
+Publisert på https://godly-god-gange-game.vercel.app/ via `main` i `larsmonsen2-cloud/GodlyGodGangeGame`.

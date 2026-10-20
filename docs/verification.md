@@ -51,3 +51,15 @@ Utført i Codex sin Chromium-baserte nettleser, med eksplisitte viewport-større
 - Redusert bevegelse er implementert i CSS og Phaser, men ikke testet med en endret operativsysteminnstilling.
 - Ingen lagring finnes i fase 1; omlasting starter på nytt.
 - Ingen generell garanti gis for alle nettlesere eller ekstremt små skjermstørrelser.
+
+## Fase 2 – verifisert 20. oktober 2026
+
+- `npm test`: 19 tester består. Dekker tidligere svarregler, flere nivåer i én XP-tildeling, overskytende XP, poengbruk, uavhengig skade, engangsbelønning, utsatt nivådialog, lagringsrundtur, ugyldige data og utilgjengelig lagring.
+- `npm run build`: består. Vite gir fortsatt den kjente størrelsesadvarselen for Phaser-pakken.
+- Nettleser: fem riktige svar gir nivå 2 etter visning av likheten. Valg av magipoeng gir Magic 7 og 10 skade med kvisten. Omlasting bevarer nivå, XP, egenskaper og våpen, og åpner heltesiden.
+- Heltesiden kontrollert uten scrolling på 360 × 640 og 320 × 568, også med navn på 20 brede tegn. Treningsløkken prøvd på 360 × 640 og 390 × 844. PC-oppsett kontrollert på 1280 × 720.
+- Produksjonsbygget er prøvd med både nærkamp og magi, navigering og neste oppgave. Ingen konsollfeil i denne kontrollen.
+- Phaser-opprydding beskytter nå også mot at en avsluttet instans starter sin scene forsinket, og canvas følger endringer i portrettets tilgjengelige høyde.
+- Fortsatt viewport-testing på PC, ikke en fysisk telefon. Lokal lagring er per nettleser og domene, uten synkronisering eller konto. Arena og lyd er ikke implementert.
+
+Den tidligere fase 1-begrensningen om at helten forsvinner ved omlasting gjelder ikke lenger.

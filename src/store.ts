@@ -1,7 +1,9 @@
-import { CONFIG, attackDamage, type HeroColor } from './config';
+import { CONFIG, type HeroColor } from './config';
+import { newHero, grantXp, damageFor, spendPoint, WEAPONS, type Hero, type Attribute, type WeaponId } from './progression';
+import { browserStorage, loadHero, saveHero, type SaveStorage, type StorageStatus } from './storage';
 import { isCorrect, makeQuestion, type Feedback, type Question } from './questions';
 
-export type Hero = { name: string; color: HeroColor };
+export type { Hero } from './progression';
 export type GameState = {
   screen: 'create' | 'hero' | 'training';
   hero: Hero | null;
@@ -9,18 +11,23 @@ export type GameState = {
   input: string;
   mistakes: number;
   feedback: Feedback;
+  levelUp: number | null;
+  storageStatus: StorageStatus;
 };
-export type Attack = { questionId: number; damage: number };
+export type Attack = { questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, question: null, input: '', mistakes: 0, feedback: 'answering' };
+  private state: GameState = { screen: 'create', hero: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session' };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
   private serial = 0;
   private generation = 0;
 
-  constructor(private random: () => number = Math.random) {}
+  constructor(private random: () => number = Math.random, private storage: SaveStorage | null = null) {
+    const saved = loadHero(storage);
+    this.state = { ...this.state, hero: saved.hero, screen: saved.hero ? 'hero' : 'create', storageStatus: saved.status };
+  }
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -31,6 +38,7 @@ export class GameStore {
     return () => { this.attackListeners.delete(listener); };
   };
   private update(patch: Partial<GameState>) {
+    if (patch.hero) patch.storageStatus = saveHero(this.storage, patch.hero);
     this.state = { ...this.state, ...patch };
     this.listeners.forEach(listener => listener());
   }
@@ -49,7 +57,7 @@ export class GameStore {
     const trimmed = name.trim();
     if (this.state.screen !== 'create' || !trimmed || Array.from(trimmed).length > CONFIG.maxNameLength ||
         !CONFIG.colors.some(c => c.id === color)) return false;
-    this.update({ hero: { name: trimmed, color }, screen: 'hero' });
+    this.update({ hero: newHero(trimmed, color), screen: 'hero' });
     return true;
   }
   startTraining() {
@@ -60,7 +68,7 @@ export class GameStore {
   leaveTraining() {
     if (!this.state.hero) return;
     this.cancel();
-    this.update({ screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering' });
+    this.update({ screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
   }
   digit(value: string) {
     if (this.state.screen !== 'training' || this.state.feedback !== 'answering' || !/^\d$/.test(value) || this.state.input.length >= CONFIG.maxDigits) return;
@@ -74,9 +82,14 @@ export class GameStore {
     if (screen !== 'training' || feedback !== 'answering' || !question || input === '') return;
     if (isCorrect(question, input)) {
       // Lock synchronously before emitting. Rendering never grants an attack.
-      this.update({ feedback: 'correct' });
-      this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: attackDamage }));
-      this.later(CONFIG.timing.correct, () => this.newQuestion());
+      const before = this.state.hero!;
+      const hero = grantXp(before, CONFIG.progression.xpPerAnswer);
+      this.update({ feedback: 'correct', hero });
+      this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
+      this.later(CONFIG.timing.correct, () => {
+        if (hero.level > before.level) this.update({ levelUp: hero.level - before.level });
+        else this.newQuestion();
+      });
     } else {
       const nextMistakes = mistakes + 1;
       this.update({ feedback: nextMistakes === 1 ? 'first-error' : 'second-error', mistakes: nextMistakes });
@@ -87,6 +100,21 @@ export class GameStore {
   }
   next() {
     if (this.state.screen === 'training' && this.state.feedback === 'reveal') this.newQuestion();
+  }
+  continueTraining() {
+    if (this.state.screen !== 'training' || !this.state.levelUp) return;
+    this.update({ levelUp: null });
+    this.newQuestion();
+  }
+  spend(attribute: Attribute) {
+    const { hero, screen } = this.state;
+    if (!hero || screen !== 'hero') return;
+    const updated = spendPoint(hero, attribute);
+    if (updated !== hero) this.update({ hero: updated });
+  }
+  equip(weapon: WeaponId) {
+    if (this.state.screen !== 'hero' || !this.state.hero || !Object.hasOwn(WEAPONS, weapon)) return;
+    this.update({ hero: { ...this.state.hero, weapon } });
   }
   private newQuestion() {
     this.cancel();
@@ -99,4 +127,4 @@ export class GameStore {
   }
 }
 
-export const game = new GameStore();
+export const game = new GameStore(Math.random, browserStorage());

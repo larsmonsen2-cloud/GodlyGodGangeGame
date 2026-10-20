@@ -3,10 +3,21 @@ export const CONFIG = {
   maxFactor: 10,
   maxDigits: 3,
   maxNameLength: 20,
-  strength: 5,
+  progression: {
+    xpPerAnswer: 10,
+    baseXp: 50,
+    xpStep: 20,
+    initial: { level: 1, xp: 0, strength: 5, magic: 5, maxHealth: 40, gold: 0, points: 0 },
+    increase: { strength: 2, magic: 2, maxHealth: 10 },
+  },
   weapon: {
     name: 'En pinne med ambisjoner',
     description: 'Overbevist om at den en dag skal bli et legendarisk sverd.',
+    damage: 3,
+  },
+  magicWeapon: {
+    name: 'En kvist med stormannsgalskap',
+    description: 'Har foreløpig bare satt fyr på sine egne forventninger.',
     damage: 3,
   },
   timing: {
@@ -20,6 +31,7 @@ export const CONFIG = {
     hit: 90,
     damageFloat: 750,
     idle: 1500,
+    projectile: 340,
   },
   colors: [
     { id: 'forest', name: 'Skoggrønn', value: '#69b89a', dark: '#397d68' },
@@ -29,4 +41,3 @@ export const CONFIG = {
 } as const;
 
 export type HeroColor = typeof CONFIG.colors[number]['id'];
-export const attackDamage = CONFIG.strength + CONFIG.weapon.damage;

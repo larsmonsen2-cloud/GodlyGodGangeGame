@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react';
-import { CONFIG, attackDamage, type HeroColor } from './config';
+import { CONFIG, type HeroColor } from './config';
 import { game } from './store';
+import { HeroProgress, Progress, Modal, StorageNotice } from './HeroProgress';
 import { SceneView } from './SceneView';
 import { makeKeyboardController } from './keyboard';
 
@@ -19,7 +20,7 @@ function Mark() {
   return <span className="brand-mark" aria-hidden="true">×</span>;
 }
 function Header() {
-  return <header className="site-header"><a className="brand" href="./" aria-label="Gangriket, start på nytt"><Mark />Gangriket<span className="brand-dot">✦</span></a><span className="edition">ET LITE REGNEEVENTYR</span></header>;
+  return <header className="site-header"><a className="brand" href="./" aria-label="Gangriket, heltesiden"><Mark />Gangriket<span className="brand-dot">✦</span></a><span className="edition">ET LITE REGNEEVENTYR</span></header>;
 }
 function Weapon() {
   return <div className="weapon-card"><span className="weapon-icon" aria-hidden="true">╱</span><div><span className="eyebrow">DITT STARTVÅPEN</span><h3>{CONFIG.weapon.name}</h3><p>{CONFIG.weapon.description}</p></div></div>;
@@ -33,7 +34,7 @@ export function App() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (state.screen !== 'training') return;
+    if (state.screen !== 'training' || state.levelUp) return;
     const { down, up, blur } = makeKeyboardController(game);
     window.addEventListener('keydown', down, true);
     window.addEventListener('keyup', up);
@@ -43,7 +44,7 @@ export function App() {
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
     };
-  }, [state.screen]);
+  }, [state.screen, state.levelUp]);
 
   const timings = {
     '--correct-time': `${CONFIG.timing.correctPulse}ms`,
@@ -56,7 +57,7 @@ export function App() {
     const equation = feedback === 'correct' || feedback === 'reveal';
     const wrong = feedback === 'first-error' || feedback === 'second-error';
     const locked = feedback !== 'answering';
-    const message = feedback === 'correct' ? 'Fulltreffer! Godt regnet.'
+    const message = feedback === 'correct' ? 'Fulltreffer! +10 XP'
       : feedback === 'reveal' ? 'Riktig svar · Ta den tiden du trenger.'
       : wrong ? (feedback === 'first-error' ? 'Ikke helt. Prøv én gang til!' : 'Vi ser på svaret sammen.')
       : mistakes ? 'Du klarer det. Prøv igjen!' : 'Regn ut og send helten i angrep.';
@@ -68,8 +69,8 @@ export function App() {
       </header>
       <section className="battle-region" aria-label="Spillområde">
         <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>
-        <SceneView color={state.hero.color} training reduced={reduced} />
-        <div className="battle-footer"><span><b>{attackDamage}</b> skade per fulltreffer</span><span>Dummyen tåler en støyt.</span></div>
+        <SceneView color={state.hero.color} weapon={state.hero.weapon} training reduced={reduced} />
+        <Progress hero={state.hero} training status={state.storageStatus} />
       </section>
       <section className={`math-region feedback-${feedback}`} aria-label="Regneområde">
         <div className="math-heading"><span className="eyebrow">DIN TUR</span><span>Den lille gangetabellen</span></div>
@@ -94,6 +95,11 @@ export function App() {
           <span>{feedback === 'reveal' ? 'Neste' : feedback === 'correct' ? 'Fulltreffer!' : 'Svar'}</span><span aria-hidden="true">{feedback === 'correct' ? '✓' : '→'}</span>
         </button>
       </section>
+      {state.levelUp && <Modal title={`Nivå ${state.hero.level}!`} onClose={() => game.continueTraining()}>
+        <p className="modal-description">Du har fått {state.levelUp} egenskapspoeng. Velg hva helten skal bli bedre på.</p>
+        <button className="primary" type="button" onClick={() => game.leaveTraining()}>Til helten og poengene</button>
+        <button className="secondary" type="button" onClick={() => game.continueTraining()}>Velg senere · tren videre</button>
+      </Modal>}
     </main>;
   }
 
@@ -104,7 +110,7 @@ export function App() {
       <div className="hero-layout">
         <section className="portrait-panel">
           <div className="portrait-top"><span className="eyebrow">{state.screen === 'create' ? 'DIN KOMMENDE HELT' : 'DIN HELT'}</span><span aria-hidden="true">✦</span></div>
-          <SceneView color={state.hero?.color ?? chosen} reduced={reduced} />
+          <SceneView color={state.hero?.color ?? chosen} weapon={state.hero?.weapon ?? 'stick'} reduced={reduced} />
           <div className="portrait-caption"><span className="little-rule" /><span>{state.hero?.name || name.trim() || 'Et eventyr venter'}</span><span className="little-rule" /></div>
           <span className="portrait-note">Liten helt. Store ambisjoner.</span>
         </section>
@@ -125,13 +131,10 @@ export function App() {
               </label>)}
             </div></fieldset>
             <Weapon />
+            <StorageNotice status={state.storageStatus} />
             <button className="primary create-button" type="submit"><span>Start eventyret</span><span aria-hidden="true">→</span></button>
           </form> : <>
-            <span className="step-label">KLAR FOR ET LITE EVENTYR</span><h2 className="hero-name-heading">{state.hero!.name}</h2><p className="hero-subtitle">Skogens ferskeste eventyrer</p>
-            <Weapon />
-            <div className="damage-card"><div><span className="eyebrow">ANGREPSSKADE</span><p>Styrke {CONFIG.strength} + våpen {CONFIG.weapon.damage}</p></div><strong>{attackDamage}<span>skade</span></strong></div>
-            <div className="training-invite"><span aria-hidden="true">✦</span><p>Tren i ditt eget tempo.<br />Dummyen har ingen andre planer.</p></div>
-            <button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button>
+            <HeroProgress hero={state.hero!} status={state.storageStatus} />
           </>}
         </section>
       </div>

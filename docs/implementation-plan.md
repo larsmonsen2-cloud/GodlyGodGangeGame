@@ -20,13 +20,20 @@ Gjeldende krav er hele den innsendte spesifikasjonen i `game-spec.md`.
 - [x] Produksjonsbygg og lokal spillbar versjon.
 - [x] Oppfølging: heltesiden fyller én mobilskjerm uten scrolling. Portrettet tilpasser høyden, og navn, våpenbeskrivelse, skade og Tren er synlige på 360 × 640 og 390 × 844.
 
-Mobiltilpasningen er klar for publisering via GitHub og Vercel. Repositoriet heter `larsmonsen2-cloud/GodlyGodGangeGame`, og `vercel.json` inneholder byggeoppsettet. Vercel-publisering gjenstår. Den tidligere Sites-lenken viser fortsatt førsteversjonen.
+Spillet er publisert på https://godly-god-gange-game.vercel.app/ via GitHub og Vercel. Åpningsside og helteside er komprimert uten scrolling på små mobiler.
 
-Se `verification.md` for hva nettlesertestene faktisk dekker. Neste fase skal ikke påbegynnes før brukeren har prøvd spillfølelsen og bedt om videre utvikling.
+Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå bestilt fase 2. Fase 3 og 4 avventer ny bestilling.
 
-## Fase 2 – ikke påbegynt
+## Fase 2 – implementert
 
-Progresjon, XP, nivåer, egenskapspoeng, magi, våpenvalg og versjonert lokal lagring. Bruk verdier og regler i spesifikasjonen. Ingen tomme moduler for disse systemene er laget.
+- [x] 10 XP per riktig svar, dynamisk terskel, overskytende XP og flere nivåøkninger.
+- [x] Ett poeng per nivå, +2 styrke/magi eller +10 maks liv, konkret forhåndsvisning.
+- [x] Nivådialog etter korrekt likhet, med valg om å fortsette trening.
+- [x] Nivå, XP, neste treningsmål, egenskaper, poeng og skade på heltesiden.
+- [x] Gratis magivåpen med eget utseende, prosjektil og datadrevet skalering.
+- [x] Versjonert og validert lokal lagring, også gull 0, med varsel ved lagringsfeil.
+- [x] 19 regel-, tastatur-, progresjons- og lagringstester.
+- [x] Mobilkontroll og komplett løkke gjennom nivåøkning, poengvalg og omlasting.
 
 ## Fase 3 – ikke påbegynt
 

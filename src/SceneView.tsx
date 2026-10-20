@@ -3,23 +3,26 @@ import Phaser from 'phaser';
 import { makeBackground, makeDummy, makeHero } from './art';
 import { CONFIG, type HeroColor } from './config';
 import { game, type Attack } from './store';
+import type { WeaponId } from './progression';
 
-type Props = { color: HeroColor; training?: boolean; reduced: boolean };
+type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; reduced: boolean };
 
-export function SceneView({ color, training = false, reduced }: Props) {
+export function SceneView({ color, weapon = 'stick', training = false, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
+    let disposed = false;
     let detachAttack = () => {};
     class ForestScene extends Phaser.Scene {
       create() {
+        if (disposed) return;
         const width = training ? 720 : 600;
         const height = training ? 420 : 560;
         makeBackground(this, width, height, training);
         const homeX = training ? 195 : 290;
         const homeY = training ? 352 : 450;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
-        const hero = makeHero(this, homeX, homeY, color);
+        const hero = makeHero(this, homeX, homeY, color, weapon);
         hero.root.setScale(training ? 1.03 : 1.62);
         const idle = reduced ? null : this.tweens.add({
           targets: hero.root, y: homeY - (training ? 4 : 6),
@@ -44,6 +47,22 @@ export function SceneView({ color, training = false, reduced }: Props) {
           this.tweens.add({ targets: flash, alpha: 0, duration: CONFIG.timing.attackReturn, onComplete: () => flash.destroy() });
         };
         const unsubscribe = game.onAttack(event => {
+          if (event.kind === 'magic') {
+            const projectile = this.add.container(reduced ? 510 : 244, 217);
+            const glow = this.add.graphics();
+            glow.fillStyle(0xa591ff, .25).fillCircle(0, 0, 25);
+            glow.fillStyle(0xb6a6ff).fillCircle(0, 0, 12);
+            glow.fillStyle(0xf1e8ff).fillCircle(-3, -3, 6);
+            projectile.add(glow);
+            if (reduced) {
+              hit(event);
+              this.time.delayedCall(CONFIG.timing.projectile, () => projectile.destroy());
+            } else {
+              this.tweens.add({ targets: hero.arm, angle: 48, duration: CONFIG.timing.attackSwing, yoyo: true });
+              this.tweens.add({ targets: projectile, x: 520, duration: CONFIG.timing.projectile, ease: 'Sine.in', onComplete: () => { projectile.destroy(); hit(event); } });
+            }
+            return;
+          }
           if (reduced) { hit(event); return; }
           idle?.pause();
           this.tweens.add({
@@ -57,6 +76,7 @@ export function SceneView({ color, training = false, reduced }: Props) {
         });
         detachAttack = unsubscribe;
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, unsubscribe);
+        this.events.once(Phaser.Scenes.Events.DESTROY, unsubscribe);
       }
     }
     const instance = new Phaser.Game({
@@ -73,15 +93,21 @@ export function SceneView({ color, training = false, reduced }: Props) {
       input: { keyboard: false, mouse: false, touch: false },
       banner: false,
     });
+    const resize = new ResizeObserver(([entry]) => {
+      if (!disposed && instance.isBooted) instance.scale.setParentSize(entry.contentRect.width, entry.contentRect.height);
+    });
+    resize.observe(host.current);
     return () => {
+      disposed = true;
+      resize.disconnect();
       // Phaser schedules destruction on its next frame. Detach the gameplay
       // listener and visible canvas now, including during React remounts.
       detachAttack();
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [color, training, reduced]);
+  }, [color, weapon, training, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
-    role="img" aria-label={training ? 'Helten med trepinnen sin, vendt mot en treningsdummy i skogen.' : 'Din helt med fargede klær, skinnstøvler og en ambisiøs trepinne.'} />;
+    role="img" aria-label={`${training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${weapon === 'wand' ? 'en lysende magisk kvist' : 'en ambisiøs trepinne'}.`} />;
 }
