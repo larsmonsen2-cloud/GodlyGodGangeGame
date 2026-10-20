@@ -22,7 +22,7 @@ Gjeldende krav er hele den innsendte spesifikasjonen i `game-spec.md`.
 
 Spillet er publisert på https://godly-god-gange-game.vercel.app/ via GitHub og Vercel. Åpningsside og helteside er komprimert uten scrolling på små mobiler.
 
-Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå bestilt fase 2. Fase 3 og 4 avventer ny bestilling.
+Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå bestilt fase 2. Brukeren har også bestilt fase 3. Fase 4 avventer ny bestilling.
 
 ## Fase 2 – implementert
 
@@ -35,9 +35,15 @@ Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå b
 - [x] 20 regel-, tastatur-, progresjons- og lagringstester.
 - [x] Mobilkontroll og komplett løkke gjennom nivåøkning, poengvalg og omlasting.
 
-## Fase 3 – ikke påbegynt
+## Fase 3 – implementert
 
-Gøran, arenakamp, fiendeklokke, liv, pause, seier/nederlag og engangsbelønning i gull.
+- [x] Egen introduksjon og Start kamp, med original slimfigur.
+- [x] Liv, skade og angrepsmåler for Gøran, med spesifiserte faste verdier.
+- [x] Pause under svarrespons og fasit, bevart resttid og aktiv gjenopptakelse etter skjult fane.
+- [x] Seier etter fullført likhet, 25 gull én gang, ingen XP i arena.
+- [x] Nederlag uten fremgangstap, trening, retur og omkamp med full nullstilling.
+- [x] Ingen lagring av aktiv kamp; gamle timere og animasjoner ryddes ved ny kamp.
+- [x] 30 automatiserte tester og kontroll av produksjonsbygget i nettleseren.
 
 ## Fase 4 – ikke påbegynt
 

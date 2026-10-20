@@ -57,6 +57,24 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   return { root, arm, weapon, body };
 }
 
+export function makeSlime(scene: Phaser.Scene, x: number, y: number) {
+  const root = scene.add.container(x, y);
+  const g = scene.add.graphics();
+  root.add(g);
+  g.fillStyle(0x417b72).fillEllipse(0, -30, 173, 61);
+  g.fillStyle(0x8fca83).fillEllipse(0, -68, 148, 137);
+  g.fillStyle(0xb5e19a).fillEllipse(-21, -95, 90, 67);
+  g.fillStyle(0x8fca83).fillCircle(-65, -27, 24).fillCircle(62, -26, 23);
+  g.fillStyle(0xe1efb9, .8).fillEllipse(-39, -105, 18, 30).fillCircle(29, -117, 8);
+  g.fillStyle(0xf9f1ce).fillEllipse(-26, -74, 31, 35).fillEllipse(28, -74, 31, 35);
+  g.fillStyle(0x24483e).fillCircle(-31, -72, 7).fillCircle(23, -72, 7);
+  g.lineStyle(5, 0x42694b).beginPath().moveTo(-44, -96).lineTo(-12, -87).moveTo(11, -87).lineTo(43, -96).strokePath();
+  g.lineStyle(4, 0x42694b).beginPath().moveTo(-19, -39).lineTo(1, -45).lineTo(20, -39).strokePath();
+  g.fillStyle(0xd7b378).fillTriangle(-36, -140, -27, -164, -14, -141).fillTriangle(-14, -141, 1, -174, 15, -141).fillTriangle(15, -141, 30, -164, 38, -140);
+  g.fillRoundedRect(-38, -143, 76, 10, 3);
+  return root;
+}
+
 export function makeDummy(scene: Phaser.Scene, x: number, y: number) {
   const root = scene.add.container(x, y);
   const g = scene.add.graphics();

@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { makeBackground, makeDummy, makeHero } from './art';
+import { makeBackground, makeDummy, makeHero, makeSlime } from './art';
 import { CONFIG, type HeroColor } from './config';
 import { game, type Attack } from './store';
 import type { WeaponId } from './progression';
 
-type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; reduced: boolean };
+type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; encounter?: number; reduced: boolean };
 
-export function SceneView({ color, weapon = 'stick', training = false, reduced }: Props) {
+export function SceneView({ color, weapon = 'stick', training = false, arena = false, encounter, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
@@ -30,7 +30,8 @@ export function SceneView({ color, weapon = 'stick', training = false, reduced }
         });
         if (!training) return;
         this.add.ellipse(530, homeY, 110, 18, 0x1b3932, .35);
-        const dummy = makeDummy(this, 530, homeY);
+        const dummy = arena ? makeSlime(this, 530, homeY) : makeDummy(this, 530, homeY);
+        if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: .96, scaleX: 1.04, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
         const hit = (event: Attack) => {
           const text = this.add.text(527, 135, `−${event.damage}`, {
             fontFamily: 'Georgia, serif', fontSize: '44px', fontStyle: 'bold',
@@ -74,9 +75,18 @@ export function SceneView({ color, weapon = 'stick', training = false, reduced }
             },
           });
         });
-        detachAttack = unsubscribe;
-        this.events.once(Phaser.Scenes.Events.SHUTDOWN, unsubscribe);
-        this.events.once(Phaser.Scenes.Events.DESTROY, unsubscribe);
+        const offEnemy = arena ? game.onEnemyAttack(damage => {
+          const text = this.add.text(homeX, 135, `−${damage}`, { fontFamily: 'Georgia, serif', fontSize: '44px', color: '#ffd4b8', stroke: '#473a2c', strokeThickness: 5 }).setOrigin(.5);
+          if (reduced) this.time.delayedCall(CONFIG.timing.damageFloat, () => text.destroy());
+          else {
+            this.tweens.add({ targets: text, y: 87, alpha: 0, duration: CONFIG.timing.damageFloat, onComplete: () => text.destroy() });
+            this.tweens.add({ targets: dummy, x: homeX + 80, duration: CONFIG.timing.attackForward, yoyo: true, hold: CONFIG.timing.hit });
+            this.tweens.add({ targets: hero.root, angle: -8, duration: CONFIG.timing.hit, yoyo: true, repeat: 1 });
+          }
+        }) : () => {};
+        detachAttack = () => { unsubscribe(); offEnemy(); };
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, detachAttack);
+        this.events.once(Phaser.Scenes.Events.DESTROY, detachAttack);
       }
     }
     const instance = new Phaser.Game({
@@ -106,8 +116,8 @@ export function SceneView({ color, weapon = 'stick', training = false, reduced }
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [color, weapon, training, reduced]);
+  }, [color, weapon, training, arena, encounter, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
-    role="img" aria-label={`${training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${weapon === 'wand' ? 'en lysende magisk kvist' : 'en ambisiøs trepinne'}.`} />;
+    role="img" aria-label={`${arena ? 'Helten mot slimklumpen Gøran' : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${weapon === 'wand' ? 'en lysende magisk kvist' : 'en ambisiøs trepinne'}.`} />;
 }

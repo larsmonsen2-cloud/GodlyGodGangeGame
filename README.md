@@ -1,4 +1,4 @@
-# Gangriket – fase 2
+# Gangriket – fase 3
 
 Et mobilvennlig fantasyspill for den lille gangetabellen. Lag en helt, velg klær, besøk heltesiden og tren mot en svært tålmodig dummy.
 
@@ -36,9 +36,9 @@ npm run preview
 - Eget talltastatur og fysisk tastatur: tall, Backspace og Enter. Ingen automatisk innsending.
 - Redusert bevegelse følger operativsystemets innstilling.
 
-Fase 1 og 2 er implementert. Riktige svar gir 10 XP. Nivåer gir ett egenskapspoeng; spilleren velger +2 styrke, +2 magi eller +10 maks liv. Gratis pinne og magisk kvist skalerer med hver sin egenskap. Ingen automatisk skadeøkning ved nivåøkning.
+Fase 1, 2 og 3 er implementert. Riktige svar gir 10 XP. Nivåer gir ett egenskapspoeng; spilleren velger +2 styrke, +2 magi eller +10 maks liv. Gratis pinne og magisk kvist skalerer med hver sin egenskap. Ingen automatisk skadeøkning ved nivåøkning.
 
-Helten lagres automatisk i denne nettleseren på denne enheten. Omlasting åpner heltesiden med beholdt fremgang. Ingen synkronisering mellom telefon og PC. Blokkert lagring varsles, og ugyldige lagringsdata gir en ny opprettelsesside uten krasj. Gull starter på 0 og lagres, men opptjening og visning kommer med arena i fase 3. Arena og lyd er ikke implementert.
+Helten lagres automatisk i denne nettleseren på denne enheten. Omlasting åpner heltesiden med beholdt fremgang. Ingen synkronisering mellom telefon og PC. Blokkert lagring varsles, og ugyldige lagringsdata gir en ny opprettelsesside uten krasj. Arenaen har Gøran med 80 liv, 6 skade per fem sekunder og 25 gull per seier. Gull lagres og vises på heltesiden. Arena gir ingen XP. Lyd er ikke implementert.
 
 ## Kode og justering
 
@@ -73,3 +73,9 @@ Publisert på https://godly-god-gange-game.vercel.app/ via `main` i `larsmonsen2
 
 
 Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», med oppdatert figurforhåndsvisning. Valget lagres og kan ikke byttes på heltesiden. Eksisterende helter beholder valgt våpen. Nivåøkning vises som et kort merke øverst i treningen uten dialog eller ekstra trykk; neste gangestykke er umiddelbart tilgjengelig etter vanlig svarrespons. Poeng kan fordeles ved senere besøk på heltesiden.
+
+
+## Arena
+Velg Arena på heltesiden og deretter Start kamp. Riktige svar angriper. Fiendens klokke stopper under svarrespons, feilrist og fasit. Pause eller skjult fane stanser kampen til spilleren aktivt fortsetter. Seier gir gull én gang; nederlag fjerner ikke fremgang. Omkamp starter med fullt liv. Omlasting avslutter kampen og åpner heltesiden.
+
+`src/combat.ts` styrer fiendens tidsfrist. `src/store.ts` avgjør skade og utfall. Ved likt tidspunkt prioriteres et allerede forfalt fiendeangrep foran et innsendt svar. Forsinkede timere samler ikke opp en serie bakgrunnsangrep. Kampstatus lagres aldri. Balansen står i `CONFIG.enemy`.

@@ -67,3 +67,13 @@ Den tidligere fase 1-begrensningen om at helten forsvinner ved omlasting gjelder
 
 ## Oppfølging: uavbrutt trening og våpenvalg ved opprettelse
 20 tester består. Produksjonsbygg består. Nettleser: magivåpen valgt ved opprettelse, korrekt figur og lagret våpen uten velger på heltesiden. Fem riktige svar førte direkte til en ny oppgave med nivåmerke og aktivt talltastatur, uten dialog. Tastetrykk ble registrert mens merket var synlig. Åpningsside kontrollert på 320 × 568. Tidligere omtale av nivådialog er erstattet av denne flyten.
+
+## Fase 3 – arena
+
+- `npm test`: 30 tester består. Ti nye arenatester dekker startkrav, nøyaktig femsekundersintervall, pauser under alle svarreaksjoner, manuell pause under svarrespons og fasit, gull én gang per seier, ingen arena-XP, omkamp, nederlag, simultane angrep, lagring og kansellering av gamle timere.
+- `npm run build`: består, med kjent størrelsesadvarsel for Phaser.
+- Produksjonsbygget prøvd i nettleseren: introduksjon, ti riktige svar med magivåpen, seier, 25 gull, omkamp med fullt liv, manuell pause, nederlag, Gå til trening og retur til helten.
+- Omlasting bevarte 25 gull, XP og egenskaper. Ingen konsollfeil eller advarsler i denne testøkten.
+- Arena, helse og angrepsmåler er isolert fra regneområdet. På 360 × 640 og 320 × 568 samsvarer områdenes kanter; Svar-knappen ligger innenfor skjermen. Tallknapper er minst 44 px høye. Heltesiden med Tren og Arena får også plass på 320 × 568.
+- Automatisk pause på `visibilitychange` er implementert med krav om Fortsett. In-app-testnettleseren rapporterte fortsatt fanen som synlig etter åpning av en annen fane, så faktisk bakgrunnsbytte på fysisk telefon er ikke verifisert her. Pausemekanismen og at svarrespons ikke opphever pausen er dekket av tester.
+- Fremdeles ingen fysisk telefontest, lyd, butikk eller fase 4. Pågående kamper lagres ikke. Gull er opptjent og lagret; bruk av gull kommer i en senere fase.

@@ -3,6 +3,14 @@ export const CONFIG = {
   maxFactor: 10,
   maxDigits: 3,
   maxNameLength: 20,
+  enemy: {
+    name: 'Gøran, den lettere fornærmede slimklumpen',
+    description: 'Har aldri tapt en kamp han selv har ført statistikk over.',
+    health: 80,
+    damage: 6,
+    interval: 5000,
+    gold: 25,
+  },
   progression: {
     xpPerAnswer: 10,
     baseXp: 50,

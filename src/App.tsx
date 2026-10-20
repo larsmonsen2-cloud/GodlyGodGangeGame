@@ -3,6 +3,7 @@ import { CONFIG, type HeroColor } from './config';
 import { game } from './store';
 import { type WeaponId } from './progression';
 import { HeroProgress, Progress, StorageNotice } from './HeroProgress';
+import { ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
 import { SceneView } from './SceneView';
 import { makeKeyboardController } from './keyboard';
 
@@ -33,7 +34,7 @@ export function App() {
   const [weapon, setWeapon] = useState<WeaponId>('stick');
 
   useEffect(() => {
-    if (state.screen !== 'training') return;
+    if ((state.screen !== 'training' && state.screen !== 'arena') || state.combat?.paused || state.combat?.resultReady) return;
     const { down, up, blur } = makeKeyboardController(game);
     window.addEventListener('keydown', down, true);
     window.addEventListener('keyup', up);
@@ -43,7 +44,13 @@ export function App() {
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
     };
-  }, [state.screen]);
+  }, [state.screen, state.combat?.paused, state.combat?.resultReady]);
+
+  useEffect(() => {
+    const visibility = () => { if (document.hidden) game.pauseArena(); };
+    document.addEventListener('visibilitychange', visibility);
+    return () => document.removeEventListener('visibilitychange', visibility);
+  }, []);
 
   const timings = {
     '--correct-time': `${CONFIG.timing.correctPulse}ms`,
@@ -51,26 +58,29 @@ export function App() {
     '--reveal-time': `${CONFIG.timing.reveal}ms`,
   } as CSSProperties;
 
-  if (state.screen === 'training' && state.hero && state.question) {
+  if (state.screen === 'arena-intro' && state.hero) return <ArenaIntro hero={state.hero} reduced={reduced} />;
+
+  if ((state.screen === 'training' || state.screen === 'arena') && state.hero && state.question) {
+    const arena = state.screen === 'arena';
     const { question, feedback, input, mistakes } = state;
     const equation = feedback === 'correct' || feedback === 'reveal';
     const wrong = feedback === 'first-error' || feedback === 'second-error';
-    const locked = feedback !== 'answering';
-    const message = feedback === 'correct' ? 'Fulltreffer! +10 XP'
+    const locked = feedback !== 'answering' || !!state.combat?.paused || (arena && state.combat?.outcome !== 'active');
+    const message = feedback === 'correct' ? (arena ? 'Fulltreffer!' : 'Fulltreffer! +10 XP')
       : feedback === 'reveal' ? 'Riktig svar · Ta den tiden du trenger.'
       : wrong ? (feedback === 'first-error' ? 'Ikke helt. Prøv én gang til!' : 'Vi ser på svaret sammen.')
       : mistakes ? 'Du klarer det. Prøv igjen!' : 'Regn ut og send helten i angrep.';
-    return <main className="training-shell" style={timings}>
+    return <main className={`training-shell ${arena ? 'arena-shell' : ''}`} style={timings}>
       <header className="training-header">
         <button type="button" className="back-button" onClick={() => game.leaveTraining()} aria-label="Tilbake til helten">← <span>Helten</span></button>
-        <div className="training-title"><span className="eyebrow">SKOGLYSNINGEN</span><h1>Treningsplassen</h1></div>
-        <span className="small-mark" aria-hidden="true">×</span>
+        <div className="training-title"><span className="eyebrow">{arena ? 'SLIMARENAEN' : 'SKOGLYSNINGEN'}</span><h1>{arena ? 'Kamp mot Gøran' : 'Treningsplassen'}</h1></div>
+        {arena ? <button className="pause-button" disabled={state.combat?.outcome !== 'active'} onClick={() => game.pauseArena()}>Pause</button> : <span className="small-mark" aria-hidden="true">×</span>}
       </header>
       <section className="battle-region" aria-label="Spillområde">
-        <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>
-        <SceneView color={state.hero.color} weapon={state.hero.weapon} training reduced={reduced} />
+        {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}
+        <SceneView color={state.hero.color} weapon={state.hero.weapon} training arena={arena} encounter={state.combat?.id} reduced={reduced} />
         {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><span aria-hidden="true">✦</span><div><strong>Nivå {state.levelUp}!</strong><small>Nytt egenskapspoeng</small></div></div>}
-        <Progress hero={state.hero} training status={state.storageStatus} />
+        {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
       </section>
       <section className={`math-region feedback-${feedback}`} aria-label="Regneområde">
         <div className="math-heading"><span className="eyebrow">DIN TUR</span><span>Den lille gangetabellen</span></div>
@@ -95,6 +105,7 @@ export function App() {
           <span>{feedback === 'reveal' ? 'Neste' : feedback === 'correct' ? 'Fulltreffer!' : 'Svar'}</span><span aria-hidden="true">{feedback === 'correct' ? '✓' : '→'}</span>
         </button>
       </section>
+      {arena && state.combat && <ArenaOverlay combat={state.combat} status={state.storageStatus} />}
     </main>;
   }
 

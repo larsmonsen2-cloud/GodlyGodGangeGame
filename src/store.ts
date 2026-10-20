@@ -1,3 +1,4 @@
+import { EnemyClock, type Combat } from './combat';
 import { CONFIG, type HeroColor } from './config';
 import { newHero, grantXp, damageFor, spendPoint, WEAPONS, type Hero, type Attribute, type WeaponId } from './progression';
 import { browserStorage, loadHero, saveHero, type SaveStorage, type StorageStatus } from './storage';
@@ -5,8 +6,9 @@ import { isCorrect, makeQuestion, type Feedback, type Question } from './questio
 
 export type { Hero } from './progression';
 export type GameState = {
-  screen: 'create' | 'hero' | 'training';
+  screen: 'create' | 'hero' | 'training' | 'arena-intro' | 'arena';
   hero: Hero | null;
+  combat: Combat | null;
   question: Question | null;
   input: string;
   mistakes: number;
@@ -17,11 +19,13 @@ export type GameState = {
 export type Attack = { questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session' };
+  private state: GameState = { screen: 'create', hero: null, combat: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session' };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
   private levelTimer: ReturnType<typeof setTimeout> | undefined;
+  private enemyListeners = new Set<(damage: number) => void>();
+  private enemyClock = new EnemyClock(CONFIG.enemy.interval, () => this.enemyHit());
   private serial = 0;
   private generation = 0;
 
@@ -38,9 +42,17 @@ export class GameStore {
     this.attackListeners.add(listener);
     return () => { this.attackListeners.delete(listener); };
   };
+  onEnemyAttack = (listener: (damage: number) => void) => {
+    this.enemyListeners.add(listener);
+    return () => { this.enemyListeners.delete(listener); };
+  };
+  enemyRemaining = () => this.enemyClock.getRemaining();
   private update(patch: Partial<GameState>) {
     if (patch.hero) patch.storageStatus = saveHero(this.storage, patch.hero);
     this.state = { ...this.state, ...patch };
+    const { screen, feedback, combat } = this.state;
+    if (screen === 'arena' && combat?.outcome === 'active' && !combat.paused && feedback === 'answering') this.enemyClock.resume();
+    else this.enemyClock.pause();
     this.listeners.forEach(listener => listener());
   }
   private cancel() {
@@ -51,7 +63,7 @@ export class GameStore {
     const generation = this.generation;
     const questionId = this.state.question?.id;
     this.timer = setTimeout(() => {
-      if (this.generation === generation && this.state.screen === 'training' && this.state.question?.id === questionId) callback();
+      if (this.generation === generation && (this.state.screen === 'training' || this.state.screen === 'arena') && this.state.question?.id === questionId) callback();
     }, ms);
   }
   createHero(name: string, color: HeroColor, weapon: WeaponId = 'stick') {
@@ -64,27 +76,43 @@ export class GameStore {
   startTraining() {
     if (!this.state.hero || this.state.screen === 'training') return;
     this.cancel();
-    this.update({ screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.enemyClock.reset();
+    this.update({ combat: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   leaveTraining() {
     if (!this.state.hero) return;
     this.cancel();
     clearTimeout(this.levelTimer);
-    this.update({ screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
+    this.enemyClock.reset();
+    this.update({ combat: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
   }
   digit(value: string) {
-    if (this.state.screen !== 'training' || this.state.feedback !== 'answering' || !/^\d$/.test(value) || this.state.input.length >= CONFIG.maxDigits) return;
+    if (!this.canAnswer() || !/^\d$/.test(value) || this.state.input.length >= CONFIG.maxDigits) return;
     this.update({ input: this.state.input + value });
   }
   backspace() {
-    if (this.state.screen === 'training' && this.state.feedback === 'answering') this.update({ input: this.state.input.slice(0, -1) });
+    if (this.canAnswer()) this.update({ input: this.state.input.slice(0, -1) });
   }
   submit() {
-    const { screen, feedback, question, input, mistakes } = this.state;
-    if (screen !== 'training' || feedback !== 'answering' || !question || input === '') return;
+    this.enemyClock.flush();
+    const { question, input, mistakes } = this.state;
+    if (!this.canAnswer() || !question || input === '') return;
     if (isCorrect(question, input)) {
       // Lock synchronously before emitting. Rendering never grants an attack.
       const before = this.state.hero!;
+      if (this.state.screen === 'arena') {
+        const combat = this.state.combat!;
+        const enemyHp = Math.max(0, combat.enemyHp - damageFor(before));
+        const won = enemyHp === 0;
+        this.update({ feedback: 'correct', combat: { ...combat, enemyHp, outcome: won ? 'won' : 'active' },
+          ...(won ? { hero: { ...before, gold: before.gold + CONFIG.enemy.gold } } : {}) });
+        this.later(CONFIG.timing.correct, () => {
+          if (won) this.update({ combat: { ...this.state.combat!, resultReady: true } });
+          else this.newQuestion();
+        });
+        this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
+        return;
+      }
       const hero = grantXp(before, CONFIG.progression.xpPerAnswer);
       this.update({ feedback: 'correct', hero });
       this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
@@ -105,7 +133,40 @@ export class GameStore {
     }
   }
   next() {
-    if (this.state.screen === 'training' && this.state.feedback === 'reveal') this.newQuestion();
+    if ((this.state.screen === 'training' || (this.state.screen === 'arena' && this.state.combat?.outcome === 'active' && !this.state.combat.paused)) && this.state.feedback === 'reveal') this.newQuestion();
+  }
+  private canAnswer() {
+    return this.state.feedback === 'answering' && (this.state.screen === 'training' ||
+      (this.state.screen === 'arena' && this.state.combat?.outcome === 'active' && !this.state.combat.paused));
+  }
+  openArena() {
+    if (!this.state.hero || this.state.screen !== 'hero') return;
+    this.cancel();
+    this.enemyClock.reset();
+    this.update({ screen: 'arena-intro', combat: null, question: null, levelUp: null });
+  }
+  startArena() {
+    if (!this.state.hero || !(this.state.screen === 'arena-intro' || (this.state.screen === 'arena' && this.state.combat?.resultReady))) return;
+    this.cancel(); clearTimeout(this.levelTimer); this.enemyClock.reset();
+    this.update({ screen: 'arena', levelUp: null,
+      combat: { id: this.serial + 1, hp: this.state.hero.maxHealth, enemyHp: CONFIG.enemy.health, outcome: 'active', resultReady: false, paused: false },
+      question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+  }
+  pauseArena() {
+    if (this.state.screen !== 'arena' || this.state.combat?.outcome !== 'active') return;
+    this.update({ combat: { ...this.state.combat, paused: true } });
+  }
+  resumeArena() {
+    if (this.state.screen !== 'arena' || this.state.combat?.outcome !== 'active') return;
+    this.update({ combat: { ...this.state.combat, paused: false } });
+  }
+  private enemyHit() {
+    if (this.state.screen !== 'arena' || !this.canAnswer()) return;
+    const combat = this.state.combat!;
+    const hp = Math.max(0, combat.hp - CONFIG.enemy.damage);
+    if (hp === 0) this.cancel();
+    this.update({ combat: { ...combat, hp, outcome: hp === 0 ? 'lost' : 'active', resultReady: hp === 0 } });
+    this.enemyListeners.forEach(listener => listener(CONFIG.enemy.damage));
   }
   spend(attribute: Attribute) {
     const { hero, screen } = this.state;
@@ -122,6 +183,8 @@ export class GameStore {
     clearTimeout(this.levelTimer);
     this.listeners.clear();
     this.attackListeners.clear();
+    this.enemyListeners.clear();
+    this.enemyClock.reset();
   }
 }
 
