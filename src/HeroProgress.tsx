@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CONFIG } from './config';
 import { answersToLevel, damageFor, WEAPONS, xpNeeded, type Attribute, type Hero } from './progression';
 import { game } from './store';
 import type { StorageStatus } from './storage';
@@ -32,10 +31,10 @@ export function Progress({ hero, training = false, status = 'saved' }: { hero: H
   </div>;
 }
 
-const attributes: { key: Attribute; label: string; effect: string }[] = [
-  { key: 'strength', label: 'Styrke', effect: '+2 nærkampsskade' },
-  { key: 'magic', label: 'Magi', effect: '+2 magisk skade' },
-  { key: 'maxHealth', label: 'Liv', effect: '+10 maks liv' },
+const attributes: { key: Attribute; label: string }[] = [
+  { key: 'strength', label: 'Styrke' },
+  { key: 'magic', label: 'Magi' },
+  { key: 'maxHealth', label: 'Helse' },
 ];
 
 export function HeroProgress({ hero, status }: { hero: Hero; status: StorageStatus }) {
@@ -52,8 +51,8 @@ export function HeroProgress({ hero, status }: { hero: Hero; status: StorageStat
     <button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button>
     {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
       <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>
-      <div className="attribute-choices">{attributes.map(({ key, label, effect }) => <button key={key} type="button" disabled={!hero.points} onClick={() => game.spend(key)}>
-        <span><b>{label}: {hero[key]} → {hero[key] + CONFIG.progression.increase[key]}</b><small>{effect}</small></span><span aria-hidden="true">+</span>
+      <div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => game.spend(key)}>
+        <b>{label}</b><span aria-hidden="true">+</span>
       </button>)}</div>
       <button type="button" className="primary" onClick={() => setChoosing(false)}>{hero.points ? 'Velg senere' : 'Ferdig'}</button>
     </Modal>}
