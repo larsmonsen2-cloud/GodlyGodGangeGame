@@ -32,6 +32,7 @@ export const CONFIG = {
     damageFloat: 750,
     idle: 1500,
     projectile: 340,
+    levelBanner: 2400,
   },
   colors: [
     { id: 'forest', name: 'Skoggrønn', value: '#69b89a', dark: '#397d68' },

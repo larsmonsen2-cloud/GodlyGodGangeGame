@@ -492,3 +492,6 @@ Lever en spillbar implementasjon med:
 - Oppdatert faseplan.
 
 Stopp etter fase 1, slik at jeg kan prøve spillfølelsen før vi fortsetter.
+
+## Godkjent endring etter fase 2
+Brukeren har endret våpenvalg til opprettelsessiden; det skal ikke kunne byttes på heltesiden. Nivåøkning skal vises grafisk uten å stoppe treningen eller åpne dialog. Dette overstyrer tidligere krav om nivådialog og våpenvalg på heltesiden.

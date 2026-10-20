@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CONFIG } from './config';
-import { answersToLevel, damageFor, WEAPONS, xpNeeded, type Attribute, type Hero, type WeaponId } from './progression';
+import { answersToLevel, damageFor, WEAPONS, xpNeeded, type Attribute, type Hero } from './progression';
 import { game } from './store';
 import type { StorageStatus } from './storage';
 
@@ -46,10 +46,6 @@ export function HeroProgress({ hero, status }: { hero: Hero; status: StorageStat
     <Progress hero={hero} />
     <dl className="hero-stats"><div><dt>Styrke</dt><dd>{hero.strength}</dd></div><div><dt>Magi</dt><dd>{hero.magic}</dd></div><div><dt>Maks liv</dt><dd>{hero.maxHealth}</dd></div></dl>
     <button className="points-button" type="button" disabled={!hero.points} onClick={() => setChoosing(true)}>{hero.points ? `Fordel ${hero.points} poeng` : '0 ubrukte poeng'}<span aria-hidden="true">{hero.points ? '+' : '✦'}</span></button>
-    <label className="weapon-label" htmlFor="weapon">Våpen <span>Begge er gratis</span></label>
-    <select id="weapon" value={hero.weapon} onChange={event => game.equip(event.target.value as WeaponId)}>
-      {Object.entries(WEAPONS).map(([id, item]) => <option key={id} value={id}>{item.label}</option>)}
-    </select>
     <div className="equipped-weapon"><h3>{weapon.name}</h3><p>{weapon.description}</p></div>
     <div className="damage-summary"><span>{weapon.stat === 'strength' ? 'Styrke' : 'Magi'} {hero[weapon.stat]} + våpen {weapon.damage}</span><b>{damageFor(hero)} skade</b></div>
     <StorageNotice status={status} />

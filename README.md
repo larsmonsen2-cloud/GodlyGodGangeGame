@@ -70,3 +70,6 @@ Prosjektet har `vercel.json` med Vite, `npm ci`, `npm run build` og outputmappen
 Bruk prosjektmappen som roten i GitHub-repositoriet og importer repositoriet i Vercel.
 Ingen miljøvariabler eller backend er nødvendige. Velg en støttet Node.js-versjon på minst 22.12.
 Publisert på https://godly-god-gange-game.vercel.app/ via `main` i `larsmonsen2-cloud/GodlyGodGangeGame`.
+
+
+Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», med oppdatert figurforhåndsvisning. Valget lagres og kan ikke byttes på heltesiden. Eksisterende helter beholder valgt våpen. Nivåøkning vises som et kort merke øverst i treningen uten dialog eller ekstra trykk; neste gangestykke er umiddelbart tilgjengelig etter vanlig svarrespons. Poeng kan fordeles ved senere besøk på heltesiden.

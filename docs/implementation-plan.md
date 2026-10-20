@@ -28,11 +28,11 @@ Se `verification.md` for hva nettlesertestene faktisk dekker. Brukeren har nå b
 
 - [x] 10 XP per riktig svar, dynamisk terskel, overskytende XP og flere nivåøkninger.
 - [x] Ett poeng per nivå, +2 styrke/magi eller +10 maks liv, konkret forhåndsvisning.
-- [x] Nivådialog etter korrekt likhet, med valg om å fortsette trening.
-- [x] Nivå, XP, neste treningsmål, egenskaper, poeng og skade på heltesiden.
+- [x] Kort nivåmerke i spillområdet etter korrekt likhet; neste oppgave starter uten pause.
+- [x] Nivå, XP, neste treningsmål, egenskaper, poeng og skade på heltesiden. Våpen velges ved opprettelse.
 - [x] Gratis magivåpen med eget utseende, prosjektil og datadrevet skalering.
 - [x] Versjonert og validert lokal lagring, også gull 0, med varsel ved lagringsfeil.
-- [x] 19 regel-, tastatur-, progresjons- og lagringstester.
+- [x] 20 regel-, tastatur-, progresjons- og lagringstester.
 - [x] Mobilkontroll og komplett løkke gjennom nivåøkning, poengvalg og omlasting.
 
 ## Fase 3 – ikke påbegynt
@@ -42,3 +42,6 @@ Gøran, arenakamp, fiendeklokke, liv, pause, seier/nederlag og engangsbelønning
 ## Fase 4 – ikke påbegynt
 
 Videre finpuss etter spilling, eventuell lyd med av/på og balansering av de implementerte systemene.
+
+
+Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», med oppdatert figurforhåndsvisning. Valget lagres og kan ikke byttes på heltesiden. Eksisterende helter beholder valgt våpen. Nivåøkning vises som et kort merke øverst i treningen uten dialog eller ekstra trykk; neste gangestykke er umiddelbart tilgjengelig etter vanlig svarrespons. Poeng kan fordeles ved senere besøk på heltesiden.

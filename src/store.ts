@@ -21,6 +21,7 @@ export class GameStore {
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
+  private levelTimer: ReturnType<typeof setTimeout> | undefined;
   private serial = 0;
   private generation = 0;
 
@@ -53,11 +54,11 @@ export class GameStore {
       if (this.generation === generation && this.state.screen === 'training' && this.state.question?.id === questionId) callback();
     }, ms);
   }
-  createHero(name: string, color: HeroColor) {
+  createHero(name: string, color: HeroColor, weapon: WeaponId = 'stick') {
     const trimmed = name.trim();
     if (this.state.screen !== 'create' || !trimmed || Array.from(trimmed).length > CONFIG.maxNameLength ||
-        !CONFIG.colors.some(c => c.id === color)) return false;
-    this.update({ hero: newHero(trimmed, color), screen: 'hero' });
+        !CONFIG.colors.some(c => c.id === color) || !Object.hasOwn(WEAPONS, weapon)) return false;
+    this.update({ hero: { ...newHero(trimmed, color), weapon }, screen: 'hero' });
     return true;
   }
   startTraining() {
@@ -68,6 +69,7 @@ export class GameStore {
   leaveTraining() {
     if (!this.state.hero) return;
     this.cancel();
+    clearTimeout(this.levelTimer);
     this.update({ screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
   }
   digit(value: string) {
@@ -87,8 +89,12 @@ export class GameStore {
       this.update({ feedback: 'correct', hero });
       this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
       this.later(CONFIG.timing.correct, () => {
-        if (hero.level > before.level) this.update({ levelUp: hero.level - before.level });
-        else this.newQuestion();
+        this.newQuestion();
+        if (hero.level > before.level) {
+          clearTimeout(this.levelTimer);
+          this.update({ levelUp: hero.level });
+          this.levelTimer = setTimeout(() => this.update({ levelUp: null }), CONFIG.timing.levelBanner);
+        }
       });
     } else {
       const nextMistakes = mistakes + 1;
@@ -101,20 +107,11 @@ export class GameStore {
   next() {
     if (this.state.screen === 'training' && this.state.feedback === 'reveal') this.newQuestion();
   }
-  continueTraining() {
-    if (this.state.screen !== 'training' || !this.state.levelUp) return;
-    this.update({ levelUp: null });
-    this.newQuestion();
-  }
   spend(attribute: Attribute) {
     const { hero, screen } = this.state;
     if (!hero || screen !== 'hero') return;
     const updated = spendPoint(hero, attribute);
     if (updated !== hero) this.update({ hero: updated });
-  }
-  equip(weapon: WeaponId) {
-    if (this.state.screen !== 'hero' || !this.state.hero || !Object.hasOwn(WEAPONS, weapon)) return;
-    this.update({ hero: { ...this.state.hero, weapon } });
   }
   private newQuestion() {
     this.cancel();
@@ -122,6 +119,7 @@ export class GameStore {
   }
   dispose() {
     this.cancel();
+    clearTimeout(this.levelTimer);
     this.listeners.clear();
     this.attackListeners.clear();
   }

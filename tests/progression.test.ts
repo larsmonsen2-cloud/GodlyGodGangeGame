@@ -29,10 +29,10 @@ describe('Progression and damage', () => {
     expect(damageFor(h, 'wand')).toBe(10);
     expect(spendPoint(h, 'strength')).toBe(h);
   });
-  it('awards XP exactly once and waits for the equation before the level dialog', () => {
+  it('awards XP exactly once and continues answering while the level graphic is visible', () => {
     vi.useFakeTimers();
     const store = new GameStore(() => 0, memory());
-    store.createHero('Sol', 'forest'); store.startTraining();
+    store.createHero('Sol', 'forest', 'wand'); store.startTraining();
     const hit = vi.fn(); store.onAttack(hit);
     for (let i = 0; i < 5; i++) {
       store.digit('1'); store.submit(); store.submit();
@@ -42,14 +42,16 @@ describe('Progression and damage', () => {
       vi.advanceTimersByTime(1);
     }
     expect(hit).toHaveBeenCalledTimes(5);
-    expect(store.getSnapshot()).toMatchObject({ levelUp: 1, feedback: 'correct', hero: { level: 2, xp: 0, points: 1 } });
-    store.digit('1'); store.submit(); store.next();
-    vi.advanceTimersByTime(60000);
-    expect(store.getSnapshot().hero?.xp).toBe(0);
-    store.continueTraining();
-    expect(store.getSnapshot()).toMatchObject({ levelUp: null, feedback: 'answering' });
-    store.leaveTraining(); store.spend('magic'); store.spend('magic'); store.equip('wand');
-    store.startTraining(); store.equip('stick'); store.spend('strength');
+    expect(store.getSnapshot()).toMatchObject({ levelUp: 2, feedback: 'answering', hero: { level: 2, xp: 0, points: 1 } });
+    store.digit('1'); store.submit();
+    expect(store.getSnapshot().hero?.xp).toBe(10);
+    expect(store.getSnapshot().levelUp).toBe(2);
+    vi.advanceTimersByTime(CONFIG.timing.correct);
+    expect(store.getSnapshot().feedback).toBe('answering');
+    vi.advanceTimersByTime(CONFIG.timing.levelBanner);
+    expect(store.getSnapshot().levelUp).toBeNull();
+    store.leaveTraining(); store.spend('magic'); store.spend('magic');
+    store.startTraining(); store.spend('strength');
     store.digit('1'); store.submit();
     expect(hit).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'magic', damage: 10 }));
     store.dispose();
@@ -71,6 +73,17 @@ describe('Progression and damage', () => {
 });
 
 describe('Versioned local saves', () => {
+  it('saves the weapon chosen during creation and rejects invalid choices', () => {
+    const storage = memory();
+    const store = new GameStore(Math.random, storage);
+    expect(store.createHero('Sol', 'sky', 'unknown' as 'wand')).toBe(false);
+    expect(store.createHero('Sol', 'sky', 'wand')).toBe(true);
+    expect(store.createHero('Sol', 'sky', 'stick')).toBe(false);
+    const restored = new GameStore(Math.random, storage);
+    expect(restored.getSnapshot().hero?.weapon).toBe('wand');
+    store.dispose(); restored.dispose();
+  });
+
   it('restores all progress on the hero screen, never a pending question', () => {
     vi.useFakeTimers();
     const storage = memory();
@@ -78,9 +91,9 @@ describe('Versioned local saves', () => {
     expect(saveHero(storage, trained)).toBe('saved');
     const store = new GameStore(() => 0, storage);
     expect(store.getSnapshot()).toMatchObject({ screen: 'hero', question: null, hero: trained });
-    store.spend('maxHealth'); store.equip('stick'); store.startTraining(); store.digit('1'); store.submit();
+    store.spend('maxHealth'); store.startTraining(); store.digit('1'); store.submit();
     const reloaded = new GameStore(Math.random, storage);
-    expect(reloaded.getSnapshot()).toMatchObject({ screen: 'hero', feedback: 'answering', levelUp: null, hero: { xp: 15, level: 3, points: 0, maxHealth: 50, magic: 7, weapon: 'stick', gold: 25 } });
+    expect(reloaded.getSnapshot()).toMatchObject({ screen: 'hero', feedback: 'answering', levelUp: null, hero: { xp: 15, level: 3, points: 0, maxHealth: 50, magic: 7, weapon: 'wand', gold: 25 } });
     store.dispose(); reloaded.dispose();
   });
   it('rejects corrupt, incompatible and impossible saves without crashing', () => {

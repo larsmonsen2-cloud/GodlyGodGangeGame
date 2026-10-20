@@ -63,3 +63,7 @@ Utført i Codex sin Chromium-baserte nettleser, med eksplisitte viewport-større
 - Fortsatt viewport-testing på PC, ikke en fysisk telefon. Lokal lagring er per nettleser og domene, uten synkronisering eller konto. Arena og lyd er ikke implementert.
 
 Den tidligere fase 1-begrensningen om at helten forsvinner ved omlasting gjelder ikke lenger.
+
+
+## Oppfølging: uavbrutt trening og våpenvalg ved opprettelse
+20 tester består. Produksjonsbygg består. Nettleser: magivåpen valgt ved opprettelse, korrekt figur og lagret våpen uten velger på heltesiden. Fem riktige svar førte direkte til en ny oppgave med nivåmerke og aktivt talltastatur, uten dialog. Tastetrykk ble registrert mens merket var synlig. Åpningsside kontrollert på 320 × 568. Tidligere omtale av nivådialog er erstattet av denne flyten.
