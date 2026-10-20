@@ -1,3 +1,4 @@
+import { enemyById } from './enemies';
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { CONFIG, type HeroColor } from './config';
 import { game } from './store';
@@ -5,7 +6,7 @@ import { sound, bindSound } from './sound';
 import { SoundButton } from './SoundButton';
 import { type WeaponId } from './progression';
 import { HeroProgress, Progress, StorageNotice } from './HeroProgress';
-import { ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
+import { ArenaSelect, ArenaIntro, ArenaHud, ArenaOverlay } from './Arena';
 import { Shop } from './WeaponShop';
 import { SavingGoal } from './SavingGoal';
 import { Modal } from './HeroProgress';
@@ -80,10 +81,12 @@ export function App() {
 
   if (state.screen === 'shop' && state.hero) return <Shop hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
 
-  if (state.screen === 'arena-intro' && state.hero) return <ArenaIntro hero={state.hero} reduced={reduced} />;
+  if (state.screen === 'arena-select' && state.hero) return <ArenaSelect hero={state.hero} />;
+  if (state.screen === 'arena-intro' && state.hero && state.selectedEnemy) return <ArenaIntro hero={state.hero} enemyId={state.selectedEnemy} reduced={reduced} />;
 
   if ((state.screen === 'training' || state.screen === 'arena') && state.hero && state.question) {
     const arena = state.screen === 'arena';
+    const enemy = state.combat ? enemyById(state.combat.enemyId) : null;
     const { question, feedback, input, mistakes } = state;
     const equation = feedback === 'correct' || feedback === 'reveal';
     const wrong = feedback === 'first-error' || feedback === 'second-error';
@@ -95,12 +98,12 @@ export function App() {
     return <main className={`training-shell ${arena ? 'arena-shell' : ''} ${state.hero.savingGoal ? 'has-saving-goal' : ''}`} style={timings}>
       <header className="training-header">
         <button type="button" className="back-button" onClick={() => game.leaveTraining()} aria-label="Tilbake til helten">← <span>Helten</span></button>
-        <div className="training-title"><span className="eyebrow">{arena ? 'SLIMARENAEN' : 'SKOGLYSNINGEN'}</span><h1>{arena ? 'Kamp mot Gøran' : 'Treningsplassen'}</h1></div>
+        <div className="training-title"><span className="eyebrow">{arena ? `KAMP ${enemy?.number} AV 10` : 'SKOGLYSNINGEN'}</span><h1>{arena ? enemy?.name : 'Treningsplassen'}</h1></div>
         <div className="play-controls"><SoundButton />{arena ? <button className="pause-button" disabled={state.combat?.outcome !== 'active'} onClick={() => game.pauseArena()}>Pause</button> : null}</div>
       </header>
       <section className="battle-region" aria-label="Spillområde">
         {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}
-        <SceneView color={state.hero.color} weapon={state.hero.weapon} training arena={arena} encounter={state.combat?.id} reduced={reduced} />
+        <SceneView color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
         {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><span aria-hidden="true">✦</span><div><strong>Nivå {state.levelUp}!</strong><small>Nytt egenskapspoeng</small></div></div>}
         {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
         <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>

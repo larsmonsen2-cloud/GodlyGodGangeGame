@@ -1,3 +1,4 @@
+import type { EnemyId } from './enemies';
 import { CONFIG, type HeroColor } from './config';
 import { WEAPONS, type WeaponId, type StarterId } from './weapons';
 export { WEAPONS, type WeaponId } from './weapons';
@@ -8,11 +9,13 @@ export type Hero = {
   weapon: WeaponId; gold: number;
   ownedWeapons: WeaponId[];
   savingGoal: WeaponId | null;
+  defeatedEnemies: EnemyId[];
+  claimedBossBonuses: EnemyId[];
 };
 export const xpNeeded = (level: number) => CONFIG.progression.baseXp + CONFIG.progression.xpStep * (level - 1);
 export const damageFor = (hero: Hero, weapon: WeaponId = hero.weapon) => hero[WEAPONS[weapon].stat] + WEAPONS[weapon].damage;
 export const answersToLevel = (hero: Hero) => Math.ceil((xpNeeded(hero.level) - hero.xp) / CONFIG.progression.xpPerAnswer);
-export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick'): Hero => ({ name, color, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null });
+export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick'): Hero => ({ name, color, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null, defeatedEnemies: [], claimedBossBonuses: [] });
 export function grantXp(hero: Hero, amount: number): Hero {
   if (!Number.isSafeInteger(amount) || amount < 0) return hero;
   let { level, xp, points } = hero;

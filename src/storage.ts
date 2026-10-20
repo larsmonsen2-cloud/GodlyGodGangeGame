@@ -1,10 +1,11 @@
+import { ENEMIES, isEnemyId } from './enemies';
 import { CONFIG } from './config';
 import { WEAPONS, xpNeeded, type Hero } from './progression';
 
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid';
 function validCore(value: unknown): value is Hero {
@@ -18,12 +19,26 @@ function validCore(value: unknown): value is Hero {
   const spent = [(h.strength - initial.strength) / increase.strength, (h.magic - initial.magic) / increase.magic, (h.maxHealth - initial.maxHealth) / increase.maxHealth];
   return spent.every(Number.isInteger) && spent.reduce((a, b) => a + b, h.points) === h.level - 1;
 }
-export function validHero(value: unknown): value is Hero {
+function validEquipment(value: unknown): value is Hero {
   if (!validCore(value)) return false;
   const h = value;
   return isWeaponId(h.weapon) && Array.isArray(h.ownedWeapons) && h.ownedWeapons.length > 0 &&
     h.ownedWeapons.every(isWeaponId) && new Set(h.ownedWeapons).size === h.ownedWeapons.length && h.ownedWeapons.includes(h.weapon) &&
     (h.savingGoal === null || (isWeaponId(h.savingGoal) && WEAPONS[h.savingGoal].tier > 0 && !h.ownedWeapons.includes(h.savingGoal)));
+}
+function restoreArena(h: Hero, version: number): Hero {
+  // Versions 1–2 never recorded victories. Gold is not evidence of a win.
+  const raw = version < 3 ? [] : (Array.isArray(h.defeatedEnemies) ? h.defeatedEnemies : []);
+  const defeatedEnemies: Hero['defeatedEnemies'] = [];
+  for (const enemy of ENEMIES) { if (!raw.includes(enemy.id)) break; defeatedEnemies.push(enemy.id); }
+  // Retain known paid bonuses even when repairing an inconsistent progression.
+  const claimedBossBonuses = version < 3 ? [] : [...new Set(Array.isArray(h.claimedBossBonuses) ? h.claimedBossBonuses.filter(id => isEnemyId(id) && ENEMIES.some(e=>e.id===id && e.boss)) : [])];
+  return {...h,defeatedEnemies,claimedBossBonuses};
+}
+export function validHero(value: unknown): value is Hero {
+  if (!validEquipment(value)) return false;
+  const clean=restoreArena(value,3);
+  return JSON.stringify(value.defeatedEnemies)===JSON.stringify(clean.defeatedEnemies) && JSON.stringify(value.claimedBossBonuses)===JSON.stringify(clean.claimedBossBonuses);
 }
 function restoreEquipment(h: Hero, version: number): Hero {
   if (version === 1) {
@@ -44,12 +59,12 @@ export function loadHero(storage: SaveStorage | null): { hero: Hero | null; stat
   try {
     if (raw === null) return { hero: null, status: 'saved' };
     const save = JSON.parse(raw);
-    if ((save?.version !== 1 && save?.version !== SAVE_VERSION) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
-    const hero = restoreEquipment(save.hero, save.version);
-    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : !validHero(save.hero);
+    if (![1,2,SAVE_VERSION].includes(save?.version) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
+    const hero = restoreArena(restoreEquipment(save.hero, save.version), save.version);
+    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : save.version === 2 ? !validEquipment(save.hero) : !validHero(save.hero);
     const changed = save.version !== SAVE_VERSION || repaired;
     return { hero, status: changed ? saveHero(storage, hero) : 'saved',
-      ...(repaired ? { notice: 'Ukjent våpenutstyr ble erstattet med et tilgjengelig våpen. Øvrig fremgang er beholdt.' } : {}) };
+      ...(repaired ? { notice: 'Ukjente eller ugyldige utstyrs- og arenadata ble reparert. Øvrig fremgang er beholdt.' } : {}) };
   } catch { return { hero: null, status: 'invalid' }; }
 }
 export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {

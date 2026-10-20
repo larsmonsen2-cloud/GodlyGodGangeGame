@@ -64,7 +64,7 @@ describe('Optional sound', () => {
     game.createHero('Sol', 'sky'); game.startTraining();
     for (let i = 0; i < 5; i++) { game.digit('1'); game.submit(); vi.advanceTimersByTime(CONFIG.timing.correct); }
     expect(audio.play.mock.calls).toEqual([['level']]);
-    game.leaveTraining(); game.openArena(); game.startArena();
+    game.leaveTraining(); game.openArena(); game.selectEnemy('goran'); game.startArena();
     for (let i = 0; i < 10; i++) { game.digit('1'); game.submit(); vi.advanceTimersByTime(CONFIG.timing.correct); }
     expect(audio.play.mock.calls).toEqual([['level'], ['victory']]);
     game.submit(); game.digit('1'); expect(audio.play).toHaveBeenCalledTimes(2);

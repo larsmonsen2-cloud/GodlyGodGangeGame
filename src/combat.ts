@@ -1,3 +1,4 @@
+import type { EnemyId, ArenaReward } from './enemies';
 // One authoritative deadline. Pausing preserves remaining time; a delayed
 // callback deals one hit, never a burst of accumulated background attacks.
 export class EnemyClock {
@@ -34,6 +35,8 @@ export class EnemyClock {
 
 export type Combat = {
   id: number;
+  enemyId: EnemyId;
+  reward: ArenaReward | null;
   hp: number;
   enemyHp: number;
   outcome: 'active' | 'won' | 'lost';

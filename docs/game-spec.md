@@ -495,3 +495,13 @@ Stopp etter fase 1, slik at jeg kan prøve spillfølelsen før vi fortsetter.
 
 ## Godkjent endring etter fase 2
 Brukeren har endret våpenvalg til opprettelsessiden; det skal ikke kunne byttes på heltesiden. Nivåøkning skal vises grafisk uten å stoppe treningen eller åpne dialog. Dette overstyrer tidligere krav om nivådialog og våpenvalg på heltesiden.
+
+## Implementert tillegg: fase 6 – arenarekке
+
+Den opprinnelige arenaen er nå kamp 1 i en rekke på ti, definert i `src/enemies.ts`. Faste verdier erstatter aldri heltens faktiske stats. Fem sekunders angrepsintervall beholdes i alle kamper. Kamp 1 har fortsatt 80 liv, 6 skade og 25 gull. Butikkpriser, våpenskade og XP-regler er uendret.
+
+Arena-knappen åpner oversikten; et kampkort åpner introduksjonen, og bare Start kamp starter klokken. Låste kamper avvises også av GameStore. Seier lagrer gull, beseirede ID-er og brukt bossbonus i én oppdatering. Neste motstander åpner introduksjonen. Omkamp gir full nullstilling og vanlig belønning. Ved tap beholdes all fremgang. Kamp 10 avslutter rekken med feiring; omkamp og vanlig navigasjon fortsetter.
+
+Lagring versjon 3: `defeatedEnemies` og `claimedBossBonuses` sammen med eksisterende hero-data. Gamle versjoner hadde ikke seiershistorikk, så migreringen åpner bare kamp 1 og beholder alt annet. Validering beholder en sammenhengende rekke kjente seire og kjente registrerte bossutbetalinger; ukjente og ugyldige referanser gir reparasjonsvarsel. Aktive kamper lagres aldri.
+
+Full bestilling finnes i `arena-progression-spec.md`. Faktiske verdier, modell og begrensninger finnes i `arena-balance.md`. Verifiserte flyter finnes i `verification.md`.

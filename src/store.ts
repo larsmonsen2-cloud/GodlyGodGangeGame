@@ -1,3 +1,4 @@
+import { enemyById, isUnlocked, awardVictory, type EnemyId } from './enemies';
 import { buyWeapon, equipOwned, setGoal, type Purchase } from './shop';
 import { isStarterId } from './weapons';
 import { EnemyClock, type Combat } from './combat';
@@ -8,9 +9,10 @@ import { isCorrect, makeQuestion, type Feedback, type Question } from './questio
 
 export type { Hero } from './progression';
 export type GameState = {
-  screen: 'create' | 'hero' | 'training' | 'arena-intro' | 'arena' | 'shop';
+  screen: 'create' | 'hero' | 'training' | 'arena-select' | 'arena-intro' | 'arena' | 'shop';
   hero: Hero | null;
   combat: Combat | null;
+  selectedEnemy: EnemyId | null;
   question: Question | null;
   input: string;
   mistakes: number;
@@ -23,7 +25,7 @@ export type GameState = {
 export type Attack = { questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, combat: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null };
+  private state: GameState = { screen: 'create', hero: null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -108,8 +110,9 @@ export class GameStore {
         const combat = this.state.combat!;
         const enemyHp = Math.max(0, combat.enemyHp - damageFor(before));
         const won = enemyHp === 0;
-        this.update({ feedback: 'correct', combat: { ...combat, enemyHp, outcome: won ? 'won' : 'active' },
-          ...(won ? { hero: { ...before, gold: before.gold + CONFIG.enemy.gold } } : {}) });
+        const victory = won ? awardVictory(before, combat.enemyId) : null;
+        this.update({ feedback: 'correct', combat: { ...combat, enemyHp, outcome: won ? 'won' : 'active', reward: victory?.reward ?? null },
+          ...(victory ? { hero: victory.hero } : {}) });
         this.later(CONFIG.timing.correct, () => {
           if (won) this.update({ combat: { ...this.state.combat!, resultReady: true } });
           else this.newQuestion();
@@ -144,17 +147,27 @@ export class GameStore {
       (this.state.screen === 'arena' && this.state.combat?.outcome === 'active' && !this.state.combat.paused));
   }
   openArena() {
-    if (!this.state.hero || this.state.screen !== 'hero') return;
-    this.cancel();
-    this.enemyClock.reset();
-    this.update({ screen: 'arena-intro', combat: null, question: null, levelUp: null });
+    const {hero,screen,combat}=this.state;
+    if (!hero || !(screen==='hero' || screen==='arena-intro' || (screen==='arena' && combat?.resultReady))) return;
+    this.cancel(); clearTimeout(this.levelTimer); this.enemyClock.reset();
+    this.update({screen:'arena-select',selectedEnemy:null,combat:null,question:null,levelUp:null});
+  }
+  selectEnemy(id: EnemyId) {
+    const {hero,screen,combat}=this.state;
+    if (!hero || !isUnlocked(hero,id) || !(screen==='arena-select' || (screen==='arena' && combat?.resultReady))) return false;
+    this.cancel(); this.enemyClock.reset();
+    this.update({screen:'arena-intro',selectedEnemy:id,combat:null,question:null});
+    return true;
   }
   startArena() {
-    if (!this.state.hero || !(this.state.screen === 'arena-intro' || (this.state.screen === 'arena' && this.state.combat?.resultReady))) return;
+    const {hero,selectedEnemy,screen,combat}=this.state;
+    if (!hero || !selectedEnemy || !isUnlocked(hero,selectedEnemy) || !(screen==='arena-intro' || (screen==='arena' && combat?.resultReady))) return;
     this.cancel(); clearTimeout(this.levelTimer); this.enemyClock.reset();
-    this.update({ screen: 'arena', levelUp: null,
-      combat: { id: this.serial + 1, hp: this.state.hero.maxHealth, enemyHp: CONFIG.enemy.health, outcome: 'active', resultReady: false, paused: false },
-      question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    const enemy=enemyById(selectedEnemy), id=++this.serial;
+    this.enemyClock=new EnemyClock(enemy.interval,()=>{if(this.state.combat?.id===id)this.enemyHit();});
+    this.update({ screen:'arena',levelUp:null,
+      combat:{id,enemyId:selectedEnemy,reward:null,hp:hero.maxHealth,enemyHp:enemy.health,outcome:'active',resultReady:false,paused:false},
+      question:makeQuestion(++this.serial,this.random),input:'',mistakes:0,feedback:'answering'});
   }
   pauseArena() {
     if (this.state.screen !== 'arena' || this.state.combat?.outcome !== 'active') return;
@@ -167,10 +180,11 @@ export class GameStore {
   private enemyHit() {
     if (this.state.screen !== 'arena' || !this.canAnswer()) return;
     const combat = this.state.combat!;
-    const hp = Math.max(0, combat.hp - CONFIG.enemy.damage);
+    const damage = enemyById(combat.enemyId).damage;
+    const hp = Math.max(0, combat.hp - damage);
     if (hp === 0) this.cancel();
     this.update({ combat: { ...combat, hp, outcome: hp === 0 ? 'lost' : 'active', resultReady: hp === 0 } });
-    this.enemyListeners.forEach(listener => listener(CONFIG.enemy.damage));
+    this.enemyListeners.forEach(listener => listener(damage));
   }
   openShop() {
     const { screen, hero, combat } = this.state;

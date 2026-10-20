@@ -14,7 +14,7 @@ describe('Arena combat', () => {
     storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => { values.set(key, value); } };
     game = new GameStore(() => 0, storage);
     game.createHero('Sol', 'forest');
-    game.openArena();
+    game.openArena(); game.selectEnemy('goran');
   });
   afterEach(() => { game.dispose(); vi.useRealTimers(); });
   const answer = (text = '1') => { for (const digit of text) game.digit(digit); game.submit(); };
@@ -104,7 +104,7 @@ describe('Arena combat', () => {
     const reload = new GameStore(() => 0, storage);
     expect(reload.getSnapshot()).toMatchObject({ screen: 'hero', combat: null, question: null, hero: { gold: 0, xp: 0 } });
     reload.dispose();
-    game.leaveTraining(); game.openArena(); game.startArena();
+    game.leaveTraining(); game.openArena(); game.selectEnemy('goran'); game.startArena();
     vi.advanceTimersByTime(1200); expect(game.getSnapshot().combat?.enemyHp).toBe(80);
     game.leaveTraining(); vi.advanceTimersByTime(50000);
     expect(game.getSnapshot()).toMatchObject({ screen: 'hero', combat: null });
@@ -114,7 +114,7 @@ describe('Arena combat', () => {
     let hero = grantXp(newHero('Sol', 'sky', 'wand'), 120);
     hero = spendPoint(spendPoint(hero, 'magic'), 'maxHealth');
     saveHero(storage, { ...hero, weapon: 'wand' });
-    game = new GameStore(() => 0, storage); game.openArena(); game.startArena();
+    game = new GameStore(() => 0, storage); game.openArena(); game.selectEnemy('goran'); game.startArena();
     const attack = vi.fn(); game.onAttack(attack); game.spend('strength'); answer();
     expect(game.getSnapshot().combat).toMatchObject({ hp: 50, enemyHp: 70 });
     expect(attack).toHaveBeenCalledWith(expect.objectContaining({ kind: 'magic', damage: 10 }));

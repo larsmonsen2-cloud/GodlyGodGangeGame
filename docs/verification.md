@@ -93,3 +93,17 @@ Nettleser på isolert localhost:4173-profil: eksisterende nivå 3-helt med 50 gu
 Visuell kontroll: helteside med sparemål uten scrolling på 320×568 og 360×640; trening med 44 px taster på 320×568; butikk og kamp på 390×844; butikk i to kolonner på 1280×900. Lange navn brytes over flere linjer. Butikken scroller som tilsiktet. Ingen horisontal overskridelse på kontrollerte flater.
 
 Begrensninger: Ikke testet på fysisk telefon. Alle seks butikkillustrasjoner deler definisjon med spillet; jernsverd og startstav er prøvd i faktisk kamp/trening. De kostbare våpnene er ikke kjøpt gjennom flere timers nettleserspilling. Redusert bevegelse bruker eksisterende globale CSS- og Phaser-regler. Ingen utrulling eller push i denne fasen.
+
+## Fase 6 – 20. oktober 2026
+
+60 automatiserte tester består, inkludert tidligere kamp-, tastatur-, lyd-, butikk- og lagringskontroller. Nye tester dekker ti kamper, låste/ukjente ID-er, eksplisitt start, opplåsning, tap, vanlig belønning én gang, bossbonus én gang på tvers av omkamp/omlasting, sluttkamp uten neste motstander, korrekt fiende, gamle kampklokker, nytt våpen og v1/v2-migrering. En deterministisk test sammenligner faktisk GameStore med balansestimatet for 4 helter × 10 motstandere × 3 svartempo (120 scenarier). Produksjonsbygg består; kun kjent stor Phaser-pakke-advarsel.
+
+Nettleser, isolerte profiler på port 4180 (ingen brukerlagringer nullstilt):
+- Opprettet ny helt; bare Gøran var åpen. Vant med ti riktige svar, fikk 25 gull og åpnet Birger. Neste motstander viste introduksjonen før start.
+- Lot Birger vinne; fikk Prøv igjen, Tren og Arenaoversikt.
+- Brukte separat testfixture med gyldig nivå 25-helt, kløyver og fire registrerte seire for å prøve bossflyten uten å måtte trene i timevis. Baron Buldre ga 95 + 50 = 145 gull, åpnet Snerk og gjorde infernoklingen kjøpbar via sparemålet.
+- Kjøpte infernoklingen fra resultatet. Etter omlasting var 95 gull, 47 skade, våpen og progresjon bevart. Snerk startet med 230 liv; ett riktig svar reduserte dette til 183.
+- Omkamp mot Baron Buldre ga bare 95 gull. Ingen ny bonus eller ny opplåsning ble vist.
+- Separat sluttfixture med ni seire: Kong Klask ga 230 + 125 = 355 gull, «Tronen er din!» og «Alle ti kampene er beseiret!». Ingen Neste-knapp, fortsatt Kjemp igjen og Arenaoversikt.
+
+Visuell kontroll på 390×844 og 360×640 samt 1280×900: vertikal liste uten panorering, bossintroduksjon og seiersdialog, nytt våpen og figur i adskilt spillområde. Store bosser holder seg i spillområdet. Balanse og gull/min er beregnede anslag, ikke resultater fra barne-/spillertesting. Ikke prøvd på fysisk telefon. Bakgrunnsfanepause har samme tidligere nettleserbegrensning (verktøyets faner rapporterer synlig); logikken er automatisert testet. Ingen produksjonsdeploy i denne fasen.

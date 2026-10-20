@@ -1,6 +1,8 @@
+import { enemyShapes } from './enemyVisuals';
+import { enemyById, type EnemyId } from './enemies';
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { makeBackground, makeDummy, makeHero, makeSlime } from './art';
+import { makeBackground, makeDummy, makeHero } from './art';
 import { CONFIG, type HeroColor } from './config';
 import { game, type Attack } from './store';
 import { WEAPONS } from './weapons';
@@ -8,9 +10,9 @@ import { weaponEffectColor } from './weaponVisuals';
 import type { WeaponId } from './progression';
 import { sound } from './sound';
 
-type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; encounter?: number; reduced: boolean };
+type Props = { color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; enemyId?: EnemyId; encounter?: number; reduced: boolean };
 
-export function SceneView({ color, weapon = 'stick', training = false, arena = false, encounter, reduced }: Props) {
+export function SceneView({ color, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
@@ -22,6 +24,11 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         const width = training ? 720 : 600;
         const height = training ? 420 : 560;
         makeBackground(this, width, height, training);
+        if (arena && enemyById(enemyId).boss) {
+          const banners=this.add.graphics();
+          banners.fillStyle(0x502e50,.35).fillRect(0,0,width,height);
+          for(const x of [70,620]) { banners.fillStyle(0x934e65).fillRect(x,20,32,114); banners.fillStyle(0xe3c274).fillTriangle(x,134,x+32,134,x+16,157); banners.lineStyle(3,0xe3c274).strokeRect(x,20,32,114); }
+        }
         const homeX = training ? 195 : 290;
         const homeY = training ? 352 : 450;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
@@ -33,7 +40,16 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
         });
         if (!training) return;
         this.add.ellipse(530, homeY, 110, 18, 0x1b3932, .35);
-        const dummy = arena ? makeSlime(this, 530, homeY) : makeDummy(this, 530, homeY);
+        const dummy = arena ? this.add.container(530,homeY) : makeDummy(this,530,homeY);
+        if(arena) {
+          const g=this.add.graphics(); dummy.add(g);
+          for(const shape of enemyShapes(enemyId)) {
+            g.fillStyle(Number.parseInt(shape.fill.slice(1),16),shape.opacity??1);
+            if(shape.type==='polygon') g.fillPoints(shape.points.map(([x,y])=>new Phaser.Geom.Point(x,y)),true);
+            else if(shape.type==='ellipse') g.fillEllipse(shape.x,shape.y,shape.width,shape.height);
+            else g.fillRect(shape.x,shape.y,shape.width,shape.height);
+          }
+        }
         if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: .96, scaleX: 1.04, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
         const hit = (event: Attack) => {
           if (!game.getSnapshot().combat?.paused) sound.play('hit');
@@ -137,8 +153,8 @@ export function SceneView({ color, weapon = 'stick', training = false, arena = f
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [color, weapon, training, arena, encounter, reduced]);
+  }, [color, weapon, training, arena, enemyId, encounter, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
-    role="img" aria-label={`${arena ? 'Helten mot slimklumpen Gøran' : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
+    role="img" aria-label={`${arena ? `Helten mot ${enemyById(enemyId).name}` : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
 }

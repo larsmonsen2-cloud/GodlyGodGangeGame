@@ -64,7 +64,7 @@ describe('Shop rules and persistence',()=>{
   const attack=vi.fn();game.onAttack(attack);game.startTraining();game.digit('1');game.submit();
   expect(attack).toHaveBeenCalledWith(expect.objectContaining({damage:12,kind:'melee'}));
   expect(game.getSnapshot().hero?.gold).toBe(0);
-  game.leaveTraining();game.openArena();game.startArena();game.openShop();game.equip('wand');
+  game.leaveTraining();game.openArena(); game.selectEnemy('goran');game.startArena();game.openShop();game.equip('wand');
   expect(game.getSnapshot().screen).toBe('arena');game.digit('1');game.submit();
   expect(game.getSnapshot().combat?.enemyHp).toBe(68);expect(game.getSnapshot().hero?.weapon).toBe('iron_sword');game.dispose();
  });

@@ -94,3 +94,18 @@ Lagringsversjon 2 migrerer gamle helter og registrerer bare eksisterende startv�
 Endringssteder: `src/weapons.ts` (katalog/navn/type), `src/config.ts` → `shop` (priser og skade), `src/weaponVisuals.ts` (felles former og effektfarger), `src/shop.ts` (kjøpsregler), `src/storage.ts` (migrering).
 
 Test lokalt: `npm run dev` eller `npm run build` og `npm run preview`. Fase 5 er ikke pushet eller publisert til Vercel.
+
+## Fase 6 – ti arenakamper (lokal versjon)
+
+Arena åpner nå en vertikal oversikt med ti faste kamper. Velg en opplåst motstander, les introduksjonen og trykk Start kamp. Første seier åpner akkurat neste motstander. Beseirede kamper kan spilles igjen uten begrensninger. Kamp 5 og 10 er bosser; Kong Klask avslutter rekken uten å tilby en kamp 11.
+
+Hver seier gir vanlig gull. Baron Buldre gir i tillegg 50 gull første gang, Kong Klask 125. Gull, seiersprogresjon og brukt bonus lagres samlet før resultatdialogen vises. Omkamper gir ingen ny førstegangsbonus. Våpen og egenskaper hentes ved hver kampstart, med fullt liv og ny kampidentitet.
+
+Versjon 3 migrerer eldre helter og bevarer utstyr, sparemål, gull, nivå og egenskaper. Versjon 1–2 lagret ikke seiere: alle begynner derfor med kamp 1 åpen, uten å tolke gull som tidligere seiere. Ukjente referanser repareres med varsel; ingen pågående kamp lagres. Innstillinger beholdes separat.
+
+- Fiendekatalog, priser per seier, bonus og faste kampverdier: `src/enemies.ts`.
+- Felles figurer for kort og Phaser: `src/enemyVisuals.ts`.
+- Balansemodell: `src/balance.ts`. Kjør `npm run balance` for å regenerere `docs/arena-balance.md`.
+- Spesifikasjon: `docs/arena-progression-spec.md`.
+
+Se `docs/arena-balance.md` for alle ti kamper og beregnede utfall ved 2, 5 og 8 sekunders aktiv tenketid. Modellen er kontrollert mot kampmotoren i 120 kombinasjoner. Balanseanslagene erstatter ikke spillerprøving. Fase 6 er ikke pushet eller publisert.

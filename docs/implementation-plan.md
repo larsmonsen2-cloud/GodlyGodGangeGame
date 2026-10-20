@@ -63,3 +63,17 @@ Oppdatert spillflyt: Kampvåpen eller magivåpen velges på «Lag din helt», me
 - [x] Lokal leveranse; ingen push eller utrulling av fase 5.
 
 Presisering av fase 2: Egenskapsvalget viser bare Styrke, Magi og Helse, uten effektforhåndsvisning. Bare ett startvåpen gis; senere bytte skjer via eide våpen i butikken.
+
+## Fase 6 – implementert lokalt
+
+- [x] Ti faste kamper, arenavelger, introduksjon og status for låst/åpen/beseiret.
+- [x] Første seier åpner neste kamp; omkamper forblir tilgjengelige.
+- [x] Datadrevne motstandere med sju figurtyper og egne bossbannere.
+- [x] Kampbelønning hver seier, separate engangsbonuser for boss 5 og 10.
+- [x] Atomisk lagring av gull, seire og utbetalte bonuser i versjon 3.
+- [x] Ny kampidentitet, nullstilte klokker og samme eksisterende feedback- og pauseregler.
+- [x] Fullført arenarekке med feiring og omkamper, ingen kamp 11.
+- [x] Deterministisk balansetabell og sammenligning mot kampmotoren i 120 scenarier.
+- [x] Lokal nettleserkontroll av ny helt, opplåsning, tap, boss, omkamp, butikk, nytt våpen og omlasting.
+
+Ingen push eller produksjonsdeploy for fase 6. Fase 5 ble separat publisert etter brukerens uttrykkelige bestilling.
