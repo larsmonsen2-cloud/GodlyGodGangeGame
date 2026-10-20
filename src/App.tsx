@@ -97,7 +97,7 @@ export function App() {
     </main>;
   }
 
-  return <div className={`page-shell ${state.screen === 'hero' ? 'hero-page' : ''}`}>
+  return <div className={`page-shell ${state.screen === 'hero' ? 'hero-page compact-page' : 'create-page compact-page'}`}>
     <Header />
     <main className="home-main">
       <div className="intro"><span className="eyebrow">SMÅ REGNESTYKKER. STORE EVENTYR.</span><h1>{state.screen === 'create' ? <>Alle helter<br />begynner et sted.</> : <>En helt.<br />En svært lovende pinne.</>}</h1><p>{state.screen === 'create' ? 'Din historie starter med en helt, en pinne og litt hjernekraft.' : 'Hvert riktige svar blir et slag. Klar for å øve?'}</p></div>
@@ -113,7 +113,7 @@ export function App() {
             event.preventDefault();
             if (!game.createHero(name, chosen)) setError('Gi helten et navn på 1–20 tegn.');
           }}>
-            <span className="step-label">01 / LAG DIN HELT</span><h2>Hvem er du,<br />eventyrer?</h2>
+            <h2>Lag din helt</h2>
             <label className="name-label" htmlFor="hero-name">Heltens navn <span>{Array.from(name.trim()).length}/20</span></label>
             <input id="hero-name" name="hero-name" value={name} autoComplete="off" placeholder="Hva skal helten hete?" aria-describedby="name-error"
               onChange={event => { setName(event.target.value); setError(''); }} />
@@ -125,7 +125,7 @@ export function App() {
               </label>)}
             </div></fieldset>
             <Weapon />
-            <button className="primary create-button" type="submit"><span>La eventyret begynne</span><span aria-hidden="true">→</span></button>
+            <button className="primary create-button" type="submit"><span>Start eventyret</span><span aria-hidden="true">→</span></button>
           </form> : <>
             <span className="step-label">KLAR FOR ET LITE EVENTYR</span><h2 className="hero-name-heading">{state.hero!.name}</h2><p className="hero-subtitle">Skogens ferskeste eventyrer</p>
             <Weapon />

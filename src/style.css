@@ -26,7 +26,7 @@
 /* The hero screen uses the available viewport; the portrait absorbs changes
    in browser height while the equipment, damage and main action stay visible. */
 @media(max-width:650px){
-  .hero-page{
+  .compact-page{
     height:100svh;
     height:100dvh;
     min-height:0;
@@ -34,12 +34,12 @@
     flex-direction:column;
     padding:env(safe-area-inset-top) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
   }
-  .hero-page .site-header{height:56px;flex:0 0 56px;width:100%;margin:0 auto;border:0}
-  .hero-page .brand{font-size:23px}
-  .hero-page .brand-mark{width:29px;height:34px;font-size:29px}
-  .hero-page .home-main{display:flex;flex:1;min-height:0;width:100%;margin:0 auto}
-  .hero-page .intro,.hero-page .home-footer{display:none}
-  .hero-page .hero-layout{
+  .compact-page .site-header{height:56px;flex:0 0 56px;width:100%;margin:0 auto;border:0}
+  .compact-page .brand{font-size:23px}
+  .compact-page .brand-mark{width:29px;height:34px;font-size:29px}
+  .compact-page .home-main{display:flex;flex:1;min-height:0;width:100%;margin:0 auto}
+  .compact-page .intro,.compact-page .home-footer{display:none}
+  .compact-page .hero-layout{
     flex:1;
     width:100%;
     height:100%;
@@ -49,19 +49,39 @@
     grid-template-rows:minmax(0,1fr) auto;
     border-radius:17px;
   }
-  .hero-page .portrait-panel{min-height:0;padding:0 0 10px}
-  .hero-page .portrait-top{flex-shrink:0;padding:12px 18px 0}
-  .hero-page .scene-portrait{flex:1;min-height:0;height:auto;margin:0}
-  .hero-page .portrait-caption{display:none}
-  .hero-page .portrait-note{flex-shrink:0;margin:0;font-size:10px}
-  .hero-page .details-panel{min-width:0;padding:14px 18px 17px}
-  .hero-page .step-label,.hero-page .hero-subtitle,.hero-page .training-invite{display:none}
-  .hero-page .hero-name-heading{font-size:25px;line-height:1.12;margin:0!important;letter-spacing:-.5px}
-  .hero-page .weapon-card{margin:10px 0;padding:10px 0;gap:11px}
-  .hero-page .weapon-card h3{font-size:16px}
-  .hero-page .weapon-card p{font-size:11px;line-height:1.45;margin-top:4px}
-  .hero-page .damage-card{padding:10px 13px}
-  .hero-page .damage-card p{margin-top:4px}
-  .hero-page .damage-card strong{font-size:31px}
-  .hero-page .primary{min-height:48px;margin-top:12px}
+  .compact-page .portrait-panel{min-height:0;padding:0 0 10px}
+  .compact-page .portrait-top{flex-shrink:0;padding:12px 18px 0}
+  .compact-page .scene-portrait{flex:1;min-height:0;height:auto;margin:0}
+  .compact-page .portrait-caption{display:none}
+  .compact-page .portrait-note{flex-shrink:0;margin:0;font-size:10px}
+  .compact-page .details-panel{min-width:0;padding:14px 18px 17px}
+  .compact-page .step-label,.compact-page .hero-subtitle,.compact-page .training-invite{display:none}
+  .compact-page .hero-name-heading{font-size:25px;line-height:1.12;margin:0!important;letter-spacing:-.5px}
+  .compact-page .weapon-card{margin:10px 0;padding:10px 0;gap:11px}
+  .compact-page .weapon-card h3{font-size:16px}
+  .compact-page .weapon-card p{font-size:11px;line-height:1.45;margin-top:4px}
+  .compact-page .damage-card{padding:10px 13px}
+  .compact-page .damage-card p{margin-top:4px}
+  .compact-page .damage-card strong{font-size:31px}
+  .compact-page .primary{min-height:48px;margin-top:12px}
+}
+
+/* Creation keeps only the choices and action, with a flexible portrait. */
+.create-page .intro,.create-page .home-footer,.create-page .portrait-caption,.create-page .portrait-note{display:none}
+.create-page .hero-layout{margin-top:24px}
+.create-page .details-panel h2{margin:0 0 18px}
+@media(max-width:650px){
+  .create-page .hero-layout{margin:0 auto}
+  .create-page .portrait-top{display:none}
+  .create-page .portrait-panel{padding:0}
+  .create-page .details-panel{padding:12px 18px 16px}
+  .create-page .details-panel h2{font-size:25px;margin:0 0 12px}
+  .create-page .name-label{margin-bottom:6px}
+  .create-page #hero-name{height:44px;padding:10px 12px}
+  .create-page .form-error{min-height:20px;padding-top:3px}
+  .create-page .color-picker legend{margin-bottom:7px}
+  .create-page .color-option{gap:4px}
+  .create-page .weapon-card{padding:8px 0;margin:10px 0 0;align-items:center}
+  .create-page .weapon-card p{display:none}
+  .create-page .weapon-icon{height:36px;width:36px;line-height:30px;font-size:39px}
 }
