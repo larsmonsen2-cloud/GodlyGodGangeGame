@@ -63,11 +63,11 @@ describe('Optional sound', () => {
     const unbind = bindSound(game, audio);
     game.createHero('Sol', 'sky'); game.startTraining();
     for (let i = 0; i < 5; i++) { game.digit('1'); game.submit(); vi.advanceTimersByTime(CONFIG.timing.correct); }
-    expect(audio.play.mock.calls).toEqual([['level']]);
+    expect(audio.play.mock.calls.filter(c=>c[0]!=='correct')).toEqual([['level']]);
     game.leaveTraining(); game.openArena(); game.selectEnemy('goran'); game.startArena();
     for (let i = 0; i < 10; i++) { game.digit('1'); game.submit(); vi.advanceTimersByTime(CONFIG.timing.correct); }
-    expect(audio.play.mock.calls).toEqual([['level'], ['victory']]);
-    game.submit(); game.digit('1'); expect(audio.play).toHaveBeenCalledTimes(2);
+    expect(audio.play.mock.calls.filter(c=>c[0]!=='correct')).toEqual([['level'], ['victory']]);
+    game.submit(); game.digit('1'); expect(audio.play.mock.calls.filter(c=>c[0]!=='correct')).toHaveLength(2);
     unbind(); audio.stop.mockClear(); game.leaveTraining(); expect(audio.stop).not.toHaveBeenCalled();
     game.dispose();
   });

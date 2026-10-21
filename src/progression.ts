@@ -1,3 +1,4 @@
+import { freshTraining, type Training } from './training';
 import { normalizeAppearance, type Appearance } from './appearance';
 import { normalizeReputation, type Reputation } from './reputation';
 import type { EnemyId } from './enemies';
@@ -6,6 +7,7 @@ import { WEAPONS, type WeaponId, type StarterId } from './weapons';
 export { WEAPONS, type WeaponId } from './weapons';
 export type Attribute = 'strength' | 'magic' | 'maxHealth';
 export type Hero = {
+  training: Training;
   appearance: Appearance;
   reputation: Reputation;
   name: string; color: HeroColor; level: number; xp: number;
@@ -19,12 +21,17 @@ export type Hero = {
 export const xpNeeded = (level: number) => CONFIG.progression.baseXp + CONFIG.progression.xpStep * (level - 1);
 export const damageFor = (hero: Hero, weapon: WeaponId = hero.weapon) => hero[WEAPONS[weapon].stat] + WEAPONS[weapon].damage;
 export const answersToLevel = (hero: Hero) => Math.ceil((xpNeeded(hero.level) - hero.xp) / CONFIG.progression.xpPerAnswer);
-export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick', appearance: Appearance = normalizeAppearance(null,color)): Hero => ({ name, color, appearance, reputation: { highestTier: 1, seenTier: 1, seenBoss: 'none' }, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null, defeatedEnemies: [], claimedBossBonuses: [] });
+export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick', appearance: Appearance = normalizeAppearance(null,color)): Hero => ({ training:freshTraining(), name, color, appearance, reputation: { highestTier: 1, seenTier: 1, seenBoss: 'none' }, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null, defeatedEnemies: [], claimedBossBonuses: [] });
 export function grantXp(hero: Hero, amount: number): Hero {
   if (!Number.isSafeInteger(amount) || amount < 0) return hero;
   let { level, xp, points } = hero;
   xp += amount;
-  while (xp >= xpNeeded(level)) { xp -= xpNeeded(level); level++; points++; }
+  const first=xpNeeded(level),step=CONFIG.progression.xpStep;
+  const cost=(n:number)=>n*first+step*n*(n-1)/2;
+  let gained=Math.floor((-(first-step/2)+Math.sqrt((first-step/2)**2+2*step*xp))/step);
+  while(cost(gained)>xp)gained--;
+  while(cost(gained+1)<=xp)gained++;
+  xp-=cost(gained);level+=gained;points+=gained;
   const next = { ...hero, level, xp, points };
   return { ...next, reputation: normalizeReputation(next) };
 }

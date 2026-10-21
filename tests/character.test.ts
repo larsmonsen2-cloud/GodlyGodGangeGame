@@ -68,7 +68,7 @@ describe('Deterministic hero chronicles',()=>{
 });
 describe('Version four migration',()=>{
  it('preserves v3 purchases, arena, goals, settings and clothing without replaying old milestones',()=>{
-  const storage=memory();const h={...grantXp(newHero('Sol','berry'),1000),gold:175,weapon:'storm_staff',ownedWeapons:['stick','storm_staff'],savingGoal:'inferno_blade',defeatedEnemies:ENEMIES.map(e=>e.id),claimedBossBonuses:['buldre','klask']};const {appearance,reputation,...old}=h;
+  const storage=memory();const h={...grantXp(newHero('Sol','berry'),1000),gold:175,weapon:'storm_staff',ownedWeapons:['stick','storm_staff'],savingGoal:'inferno_blade',defeatedEnemies:ENEMIES.slice(0,10).map(e=>e.id),claimedBossBonuses:['buldre','klask']};const {appearance,reputation,...old}=h;
   storage.setItem(SAVE_KEY,JSON.stringify({version:3,hero:old}));storage.setItem('gangriket.sound','true');const hero=loadHero(storage).hero!;expect(hero).toMatchObject({...old,savingGoal:null});expect(hero.appearance.clothes).toBe('berry');expect(hero.reputation).toEqual({highestTier:5,seenTier:5,seenBoss:'klask'});const game=selectLast(new GameStore(()=>0,storage));expect(game.getSnapshot().reputationNotice).toBeNull();expect(storage.getItem('gangriket.sound')).toBe('true');game.dispose();
  });
  it('repairs missing visual variants without deleting progress',()=>{

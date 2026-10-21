@@ -1,3 +1,4 @@
+import {freshTraining,validTraining} from './training';
 import { isNextOffer } from './shop';
 import { normalizeAppearance, validAppearance } from './appearance';
 import { normalizeReputation } from './reputation';
@@ -8,7 +9,7 @@ import { WEAPONS, xpNeeded, type Hero } from './progression';
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid' | 'blocked';
 function validCore(value: unknown): value is Hero {
@@ -35,11 +36,12 @@ function restoreArena(h: Hero, version: number): Hero {
   for (const enemy of ENEMIES) { if (!raw.includes(enemy.id)) break; defeatedEnemies.push(enemy.id); }
   // Retain known paid bonuses even when repairing an inconsistent progression.
   const claimedBossBonuses = version < 3 ? [] : [...new Set(Array.isArray(h.claimedBossBonuses) ? h.claimedBossBonuses.filter(id => isEnemyId(id) && ENEMIES.some(e=>e.id===id && e.boss)) : [])];
+  if(version<7)for(const id of defeatedEnemies)if(ENEMIES.some(e=>e.id===id&&e.boss)&&!claimedBossBonuses.includes(id))claimedBossBonuses.push(id);
   return {...h,defeatedEnemies,claimedBossBonuses};
 }
 function validPreviousHero(value: unknown): value is Hero {
   if (!validEquipment(value)) return false;
-  const clean=restoreArena(value,3);
+  const clean=restoreArena(value,7);
   return JSON.stringify(value.defeatedEnemies)===JSON.stringify(clean.defeatedEnemies) && JSON.stringify(value.claimedBossBonuses)===JSON.stringify(clean.claimedBossBonuses);
 }
 export function validHero(value: unknown): value is Hero {
@@ -68,7 +70,7 @@ function restoreHero(value: unknown, version: number): Hero | null {
   if (!validCore(value)) return null;
   const restored = restoreArena(restoreEquipment(value, version), version);
   const appearance = normalizeAppearance(version < 4 ? null : restored.appearance, restored.color);
-  return {...restored, appearance, color: appearance.clothes, reputation: normalizeReputation(restored, version < 5)};
+  return {...restored, training:version<7?freshTraining():validTraining(restored.training)?restored.training:freshTraining(), appearance, color: appearance.clothes, reputation: normalizeReputation(restored, version < 5)};
 }
 function restoreProfile(hero: Hero, id: string, notice?: string): HeroProfile {
   if (hero.savingGoal && !isNextOffer(hero, hero.savingGoal)) return {id, hero:{...hero,savingGoal:null}, notice:goalMessage};
@@ -98,18 +100,18 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
       const profile={...restoreProfile(hero,id),seenLevel:hero.level};
       repaired=save.version>=4 ? !validHero(save.hero) : save.version===3 ? !validPreviousHero(save.hero) : save.version===2 ? !validEquipment(save.hero) : !isStarterId(save.hero.weapon);
       library={profiles:[profile],lastHeroId:id,rejectedProfiles:[]};
-    } else if ([5,SAVE_VERSION].includes(save?.version) && Array.isArray(save.profiles)) {
+    } else if ([5,6,SAVE_VERSION].includes(save?.version) && Array.isArray(save.profiles)) {
       const profiles:HeroProfile[]=[], rejectedProfiles:unknown[]=Array.isArray(save.rejectedProfiles)?save.rejectedProfiles:[];
       const ids=new Set<string>();
       for (const value of save.profiles) {
-        const hero=restoreHero(value?.hero,5);
+        const hero=restoreHero(value?.hero,save.version);
         if (!hero) {rejectedProfiles.push(value);repaired=true;continue;}
         let id=value.id;
         if(typeof id!=='string'||!id||ids.has(id)){id=newProfileId();repaired=true;}
         ids.add(id);
         const seenLevel=save.version<6 || !Number.isSafeInteger(value.seenLevel) || value.seenLevel<1 || value.seenLevel>hero.level ? hero.level : value.seenLevel;
         profiles.push({...restoreProfile(hero,id,typeof value.notice==='string'?value.notice:undefined),seenLevel});
-        if (!validHero(value.hero)) repaired=true;
+        if (!validHero(value.hero)||(save.version>=7&&!validTraining(value.hero.training))) repaired=true;
       }
       if (!profiles.length && rejectedProfiles.length) return {...empty,status:'blocked'};
       library={profiles,lastHeroId:profiles.some(p=>p.id===save.lastHeroId)?save.lastHeroId:profiles[0]?.id??null,rejectedProfiles};
@@ -117,6 +119,7 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
     const changed=JSON.stringify({version:SAVE_VERSION,...library})!==raw;
     if(changed) {
       // Backup must succeed BEFORE replacing any old data. No overwriting on failed migration.
+      if(save.version<SAVE_VERSION&&storage.getItem('gangriket.save.before-v7')===null)storage.setItem('gangriket.save.before-v7',raw);
       if(storage.getItem(BACKUP_KEY)===null)storage.setItem(BACKUP_KEY,raw);
       if(saveLibrary(storage,library)!=='saved')return {...empty,status:'blocked'};
     }

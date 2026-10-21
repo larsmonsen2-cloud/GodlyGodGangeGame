@@ -1,3 +1,4 @@
+import {TRAINING} from './training';
 import { LevelEmblem } from './LevelEmblem';
 import { heroChronicle } from './reputation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -30,7 +31,7 @@ export function Progress({ hero, training = false, status = 'saved', emblem = fa
   return <div className={emblem?'emblem-progress':undefined}>{emblem&&<LevelEmblem level={hero.level} celebrate={celebrate}/>}<div className={`progress-summary ${training ? 'training-progress' : ''}`}>
     <div>{!emblem&&<b>Nivå {hero.level}</b>}<span>{hero.xp}/{xpNeeded(hero.level)} XP</span></div>
     <progress value={hero.xp} max={xpNeeded(hero.level)} aria-label="XP til neste nivå" />
-    {training && status !== 'saved' ? <StorageNotice status={status} /> : <p>{remaining} {remaining === 1 ? 'riktig svar' : 'riktige svar'} til nivå {hero.level + 1}</p>}
+    {training && status !== 'saved' ? <StorageNotice status={status} /> : <p>Høyst {remaining} {remaining === 1 ? 'riktig svar' : 'riktige svar'} til nivå {hero.level + 1}</p>}
   </div></div>;
 }
 
@@ -41,6 +42,7 @@ const attributes: { key: Attribute; label: string }[] = [
 ];
 
 export function HeroProgress({ hero, status, reputationNotice, levelCelebration }: { hero: Hero; status: StorageStatus; reputationNotice: string | null; levelCelebration:number|null }) {
+  const [spent,setSpent]=useState('');
   const [choosing, setChoosing] = useState(false);
   const weapon = WEAPONS[hero.weapon];
   const chronicle = heroChronicle(hero);
@@ -54,6 +56,7 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <button className="points-button" type="button" disabled={!hero.points} onClick={() => setChoosing(true)}>{hero.points ? `Fordel ${hero.points} poeng` : '0 ubrukte poeng'}<span aria-hidden="true">{hero.points ? '+' : '✦'}</span></button>
     <div className="equipped-weapon"><h3>{weapon.name}</h3><p>{weapon.description}</p></div>
     <div key={`${hero.weapon}-${damageFor(hero)}`} className="damage-summary changed-value"><span>{weapon.stat === 'strength' ? 'Styrke' : 'Magi'} {hero[weapon.stat]} + våpen {weapon.damage}</span><b>{damageFor(hero)} skade</b></div>
+    <p className="training-record">{TRAINING[hero.training.rank].name} · {hero.training.broken} dukker knust · {hero.training.medals.length} merker · {hero.claimedBossBonuses.length} bosstroféer</p>
     <SavingGoal hero={hero} actionable compact />
     <StorageNotice status={status} />
     <div className="hero-actions"><button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button><button className="primary arena-button" type="button" onClick={() => game.openArena()}><span>Arena</span><span aria-hidden="true">⚔</span></button><button className="primary shop-button" type="button" onClick={() => game.openShop()}><span>Butikk</span><span aria-hidden="true">◇</span></button></div>
@@ -61,7 +64,7 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <button className="edit-appearance" type="button" onClick={()=>game.openHeroes()}>Bytt helt</button>
     {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
       <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>
-      <div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => game.spend(key)}>
+      <p role="status" className="stat-upgrade">{spent}</p><div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => {game.spend(key);setSpent(`${label} økte til ${game.getSnapshot().hero![key]}`);}}>
         <b>{label}</b><span aria-hidden="true">+</span>
       </button>)}</div>
       <button type="button" className="primary" onClick={() => setChoosing(false)}>{hero.points ? 'Velg senere' : 'Ferdig'}</button>

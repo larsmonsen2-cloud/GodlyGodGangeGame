@@ -118,3 +118,14 @@ Fase 7 er publisert etter egen beskjed. Ingen push eller deploy av fase 8.
 - [ ] Separat eventuell publisering etter beskjed.
 
 Statuskorreksjon: Fase 8 er publisert på f927d0e; fase 9 er ikke publisert.
+
+## Utvidelse til ti arenaer
+
+- [x] Eksisterende systemer, ID-er og publiseringsflyt kartlagt.
+- [x] Varig trening med overkill, eksamen og gjentakbar sluttrang.
+- [x] Skadebasert XP-bonus og effektiv håndtering av mange nivåer.
+- [x] Belønninger, lyder, synlige skader og rolige alternativer.
+- [x] 100 motstandere, 20 bosser, ti kampmiljøer og 40 våpen.
+- [x] v7-migrering og særskilt backup uten tap av gamle seire/kjøp.
+- [x] 140 tester, balanseberegning, produksjonsbygg og isolert nettleserkontroll.
+- [ ] Bekreft produksjonsdeploy og funksjonstest på publisert bygg.

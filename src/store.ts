@@ -1,3 +1,4 @@
+import {trainHit} from './training';
 import { normalizeAppearance, validAppearance, type Appearance } from './appearance';
 import { normalizeReputation, pendingReputation, acknowledgeReputation, heroChronicle } from './reputation';
 import { enemyById, isUnlocked, awardVictory, type EnemyId } from './enemies';
@@ -20,6 +21,7 @@ export type GameState = {
   specialFlash: boolean;
   brokenFrom: number;
   levelCelebration: number | null;
+  trainingReward: {count:number;bonus:number}|null;
   shopSession: number;
   shopReady: boolean;
   revealedOffer: WeaponId | null;
@@ -40,7 +42,7 @@ export type ShopContext = {heroId:string|null;session:number};
 export type Attack = { heroId:string; sessionId:number; special:boolean; questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, sessionId:0,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, appearanceDraft: null, reputationNotice: null };
+  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, sessionId:0,streak:0,trainingReward:null,specialFlash:false,brokenFrom:0,levelCelebration:null,shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, appearanceDraft: null, reputationNotice: null };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -117,7 +119,7 @@ export class GameStore {
   }
   private clearSession() {
     this.cancel();clearTimeout(this.levelTimer);clearTimeout(this.shopTimer);this.enemyClock.reset();
-    this.update({sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,appearanceDraft:null,reputationNotice:null});
+    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,appearanceDraft:null,reputationNotice:null});
   }
   openHeroes() {
     if(this.state.screen!=='hero')return;
@@ -137,14 +139,14 @@ export class GameStore {
     if (!this.state.hero || !['hero','shop','arena'].includes(this.state.screen) || (this.state.screen==='arena'&&!this.state.combat?.resultReady)) return;
     this.cancel();
     this.enemyClock.reset();
-    this.update({sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   leaveTraining() {
     if (!this.state.hero || ['heroes','create','recovery'].includes(this.state.screen)) return;
     this.cancel();
     clearTimeout(this.levelTimer);
     this.enemyClock.reset();
-    this.update({streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
+    this.update({trainingReward:null,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
     this.presentReputation();this.presentLevel();
   }
   digit(value: string) {
@@ -179,8 +181,9 @@ export class GameStore {
         this.attackListeners.forEach(listener => listener(event));
         return;
       }
-      const hero = grantXp(before, CONFIG.progression.xpPerAnswer);
-      this.update({streak,specialFlash:special,brokenFrom:0, feedback: 'correct', hero });
+      const result=trainHit(before.training,damage);
+      const hero = grantXp({...before,training:result.training}, CONFIG.progression.xpPerAnswer+result.bonus);
+      this.update({trainingReward:{count:result.count,bonus:result.bonus},streak,specialFlash:special,brokenFrom:0, feedback: 'correct', hero });
       this.attackListeners.forEach(listener => listener(event));
       this.later(CONFIG.timing.correct, () => {
         this.newQuestion();
@@ -225,7 +228,7 @@ export class GameStore {
     this.cancel(); clearTimeout(this.levelTimer); this.enemyClock.reset();
     const enemy=enemyById(selectedEnemy), id=++this.serial, heroId=this.state.activeHeroId;
     this.enemyClock=new EnemyClock(enemy.interval,()=>{if(this.state.activeHeroId===heroId&&this.state.combat?.id===id)this.enemyHit();});
-    this.update({sessionId:id,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, screen:'arena',reputationNotice:null,levelUp:null,
+    this.update({trainingReward:null,sessionId:id,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, screen:'arena',reputationNotice:null,levelUp:null,
       combat:{id,enemyId:selectedEnemy,reward:null,hp:hero.maxHealth,enemyHp:enemy.health,outcome:'active',resultReady:false,paused:false},
       question:makeQuestion(++this.serial,this.random),input:'',mistakes:0,feedback:'answering'});
   }
@@ -316,7 +319,7 @@ export class GameStore {
   }
   private newQuestion() {
     this.cancel();
-    this.update({specialFlash:false,brokenFrom:0, question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.update({trainingReward:null,specialFlash:false,brokenFrom:0, question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   dispose() {
     this.cancel();

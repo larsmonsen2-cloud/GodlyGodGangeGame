@@ -38,8 +38,8 @@ describe('Ten encounter progression',()=>{
  });
  it('finishes all ten with no nonexistent next fight and retains replay rewards',()=>{
   const {game}=setup(strong());for(const enemy of ENEMIES){expect(game.selectEnemy(enemy.id)).toBe(true);game.startArena();win(game);expect(game.getSnapshot().combat?.enemyId).toBe(enemy.id);game.openArena();}
-  expect(game.getSnapshot().hero?.defeatedEnemies).toHaveLength(10);game.selectEnemy('klask');game.startArena();win(game);
-  expect(game.getSnapshot().combat?.reward).toEqual({regular:230,bonus:0,unlocked:null,completed:true});game.openArena();expect(game.selectEnemy('goran')).toBe(true);game.dispose();
+  expect(game.getSnapshot().hero?.defeatedEnemies).toHaveLength(100);game.selectEnemy(ENEMIES[99].id);game.startArena();win(game);
+  expect(game.getSnapshot().combat?.reward).toEqual({regular:ENEMIES[99].gold,bonus:0,unlocked:null,completed:true});game.openArena();expect(game.selectEnemy('goran')).toBe(true);game.dispose();
  });
  it('cancels old feedback and enemy clocks and uses newly equipped weapon on next encounter',()=>{
   const {game}=setup({...strong(),gold:50});game.selectEnemy('goran');game.startArena();const old=game.getSnapshot().combat!.id;game.digit('1');game.submit();
@@ -55,7 +55,7 @@ describe('Ten encounter progression',()=>{
  it('persists reward before result so reload grants nothing extra',()=>{
   const {game,storage}=setup(strong());game.selectEnemy('goran');game.startArena();game.digit('1');game.submit();const reload=selectLast(new GameStore(()=>0,storage));expect(reload.getSnapshot()).toMatchObject({screen:'hero',combat:null,hero:{gold:25,defeatedEnemies:['goran']}});game.dispose();reload.dispose();
  });
- it('keeps enemy values fixed and every interval at five seconds',()=>{expect(ENEMIES).toHaveLength(10);expect(ENEMIES.filter(e=>e.boss).map(e=>e.number)).toEqual([5,10]);expect(ENEMIES.every(e=>e.interval===5000)).toBe(true);expect(enemyById('goran')).toMatchObject({health:80,damage:6,gold:25});});
+ it('keeps enemy values fixed and every interval at five seconds',()=>{expect(ENEMIES).toHaveLength(100);expect(ENEMIES.filter(e=>e.boss).map(e=>e.number)).toEqual(Array.from({length:20},(_,i)=>(i+1)*5));expect(ENEMIES.every(e=>e.interval===5000)).toBe(true);expect(enemyById('goran')).toMatchObject({health:80,damage:6,gold:25});});
 });
 
 // Existing gameplay tests explicitly choose the last profile after the new startup selector.

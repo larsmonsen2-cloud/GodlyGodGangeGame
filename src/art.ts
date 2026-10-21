@@ -1,3 +1,4 @@
+import {dummyFor,type Training} from './training';
 import { DEFAULT_APPEARANCE, SKINS, HAIR_COLORS, type Appearance } from './appearance';
 import Phaser from 'phaser';
 import { CONFIG, type HeroColor } from './config';
@@ -105,7 +106,7 @@ export function makeSlime(scene: Phaser.Scene, x: number, y: number) {
   return root;
 }
 
-export function makeDummy(scene: Phaser.Scene, x: number, y: number) {
+export function makeDummy(scene: Phaser.Scene, x: number, y: number, progress?:Training) {
   const root = scene.add.container(x, y);
   const g = scene.add.graphics();
   root.add(g);
@@ -122,6 +123,17 @@ export function makeDummy(scene: Phaser.Scene, x: number, y: number) {
   g.fillStyle(0xd7b77d).fillRoundedRect(-25, -204, 50, 53, 19);
   g.fillStyle(0x82613c).fillRoundedRect(-31, -206, 62, 10, 4);
   g.lineStyle(3, 0x694d34).beginPath().moveTo(-15, -185).lineTo(-7, -177).moveTo(-7, -185).lineTo(-15, -177).moveTo(7, -185).lineTo(15, -177).moveTo(15, -185).lineTo(7, -177).moveTo(-9, -164).lineTo(11, -164).strokePath();
+  if(progress){
+    const d=dummyFor(progress),rank=progress.rank;
+    g.fillStyle(d.color).fillRoundedRect(-31,-139,62,84,rank%2?4:18);g.lineStyle(4,0x563f36).strokeCircle(0,-100,20);
+    if(rank>=2)g.fillStyle(d.color).fillTriangle(-40,-202,0,-250,40,-202);
+    if(rank>=3)g.fillStyle(d.color).fillRect(-65,-139,25,60).fillRect(40,-139,25,60);
+    if(rank>=5){g.lineStyle(5,d.color).strokeCircle(0,-170,63);g.fillStyle(0xf1e8cc).fillTriangle(-12,-97,0,-120,12,-97);}
+    if(rank>=7)g.fillStyle(d.color,.5).fillTriangle(-39,-140,-98,-203,-72,-55).fillTriangle(39,-140,98,-203,72,-55);
+    if(d.exam){g.fillStyle(0xefcf78).fillTriangle(-30,-211,-38,-240,0,-222).fillTriangle(0,-222,38,-240,30,-211);root.setScale(1.15);}
+    if(progress.hp<d.maxHp)g.lineStyle(3,0x493b32).beginPath().moveTo(-20,-130).lineTo(3,-110).lineTo(-8,-87).strokePath();
+    if(progress.hp<d.maxHp/2)g.lineStyle(5,0x493b32).beginPath().moveTo(25,-137).lineTo(12,-116).lineTo(24,-73).strokePath();
+  }
   return root;
 }
 

@@ -1,3 +1,4 @@
+import {ARENAS,arenaIndex} from './arenas';
 import { DEFAULT_APPEARANCE, type Appearance } from './appearance';
 import { enemyShapes } from './enemyVisuals';
 import { enemyById, type EnemyId } from './enemies';
@@ -30,6 +31,23 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
           banners.fillStyle(0x502e50,.35).fillRect(0,0,width,height);
           for(const x of [70,620]) { banners.fillStyle(0x934e65).fillRect(x,20,32,114); banners.fillStyle(0xe3c274).fillTriangle(x,134,x+32,134,x+16,157); banners.lineStyle(3,0xe3c274).strokeRect(x,20,32,114); }
         }
+        if(arena){
+         const theme=ARENAS[arenaIndex(enemyById(enemyId).number)],index=theme.id,ink=parseInt(theme.accent.slice(1),16),env=this.add.graphics();
+         if(index)env.fillStyle(parseInt(theme.background.slice(1),16)).fillRect(0,0,width,height);
+         env.lineStyle(4,ink,.35);env.fillStyle(ink,.25);
+         for(let i=0;i<5;i++){const x=35+i*150;
+          if(index===1){env.fillEllipse(x,345,100,24);env.lineBetween(x,340,x+12,220);env.fillCircle(x+14,205,13);}
+          if(index===2){env.fillRect(x,70,80,280);env.fillRect(x-8,55,24,30);env.fillRect(x+63,55,24,30);env.strokeRect(x+23,110,35,60);}
+          if(index===3){env.fillTriangle(x,0,x+45,180+(i%2)*55,x+85,0);env.fillTriangle(x,350,x+30,230,x+60,350);}
+          if(index===4){env.strokeEllipse(x,320,140,30);env.strokeEllipse(x+50,350,120,24);env.fillCircle(x,95+i*15,10+i*3);}
+          if(index===5){env.beginPath().moveTo(x+60,40).lineTo(x+14,130).lineTo(x+47,130).lineTo(x,215).strokePath();env.fillEllipse(x,45,145,50);}
+          if(index===6){env.fillTriangle(x,330,x+35,100,x+70,330);env.strokeTriangle(x+10,330,x+35,140,x+50,330);}
+          if(index===7){env.fillTriangle(x-45,350,x+40,165,x+115,350);env.lineStyle(7,0xf6ad63,.6).beginPath().moveTo(x+40,170).lineTo(x+25,230).lineTo(x+53,280).lineTo(x+38,350).strokePath();}
+          if(index===8){env.fillCircle(x,55+i*25,4);env.strokeCircle(x+32,130,15+i*3);env.lineBetween(x-8,55+i*25,x+8,55+i*25);}
+          if(index===9){env.fillRect(x,45,20,290);env.strokeCircle(x+10,45,28);env.lineBetween(x+10,335,x+75,380);}
+         }
+         if(index)env.fillStyle(ink,.15).fillEllipse(360,365,650,65);
+        }
         const homeX = training ? 195 : 290;
         const homeY = training ? 352 : 450;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
@@ -41,7 +59,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
         });
         if (!training) return;
         this.add.ellipse(530, homeY, 110, 18, 0x1b3932, .35);
-        const dummy = arena ? this.add.container(530,homeY) : makeDummy(this,530,homeY);
+        let dummy = arena ? this.add.container(530,homeY) : makeDummy(this,530,homeY,game.getSnapshot().hero?.training);
         if(arena) {
           const g=this.add.graphics(); dummy.add(g);
           for(const shape of enemyShapes(enemyId)) {
@@ -60,6 +78,12 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
           if (!game.getSnapshot().combat?.paused) sound.play('hit');
           const impactColor = weaponEffectColor(weapon);
           const ring = this.add.circle(527, 240, event.special?40:24).setStrokeStyle(event.special?7:4, impactColor);
+          const reward=!arena?game.getSnapshot().trainingReward:null;
+          if(reward?.count){
+           sound.play('break');
+           if(reduced)dummy.setAlpha(.25);else{this.tweens.add({targets:dummy,angle:65,scaleY:.15,alpha:.25,duration:280});for(let i=0;i<6;i++){const chip=this.add.rectangle(530,250,12,19,0xdac18b);this.tweens.add({targets:chip,x:470+i*22,y:350,angle:i*51,alpha:0,duration:400,onComplete:()=>chip.destroy()});}}
+          }
+          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();dummy=makeDummy(this,530,homeY,game.getSnapshot().hero?.training);});
           const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
           if (defeated) {
             this.tweens.killTweensOf(dummy);

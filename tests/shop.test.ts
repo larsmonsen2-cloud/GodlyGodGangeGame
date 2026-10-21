@@ -90,7 +90,7 @@ describe('Shop rules and persistence',()=>{
   expect(game.getSnapshot()).toMatchObject({storageStatus:'session',hero:{gold:0,weapon:'iron_sword',ownedWeapons:['wand','iron_sword']}});game.dispose();
  });
  it('has six paid weapons with stable prices and damage tiers',()=>{
-  expect(Object.values(WEAPONS).filter(w=>w.tier>0).map(w=>[w.price,w.damage])).toEqual([[50,7],[125,13],[250,22],[50,7],[125,13],[250,22]]);
+  expect(Object.values(WEAPONS).filter(w=>w.tier>0&&w.tier<=3).map(w=>[w.price,w.damage])).toEqual([[50,7],[125,13],[250,22],[50,7],[125,13],[250,22]]);
  });
 });
 

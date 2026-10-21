@@ -29,6 +29,14 @@ export function enemyShapes(id:EnemyId):WeaponShape[] {
   if(v.kind==='wood'){poly([[-39,-199],[-14,-230],[0,-213],[29,-237],[39,-199]],v.accent);rect(56,-190,10,181,'#79553c');poly([[56,-165],[40,-187],[44,-195],[65,-178]],'#79553c');}
   else {rect(75,-172,8,144,'#79553c');poly([[67,-175],[70,-225],[83,-245],[94,-220],[90,-175]],v.accent);rect(63,-176,32,9,'#dab866');}
  }
+ const variant=v.variant??0;
+ if(variant){
+  if(variant%4===0){poly([[-32,-195],[-66,-248],[-51,-190]],v.accent);poly([[32,-195],[66,-248],[51,-190]],v.accent);}
+  if(variant%4===1){poly([[-40,-146],[-109,-196],[-90,-62],[-43,-90]],v.accent,.85);poly([[40,-146],[109,-196],[90,-62],[43,-90]],v.accent,.85);}
+  if(variant%4===2){poly([[-74,-157],[-110,-132],[-100,-57],[-68,-33],[-39,-68],[-42,-137]],v.accent);rect(-80,-132,8,68,'#f1e4bc');rect(-100,-108,48,8,'#f1e4bc');}
+  if(variant%4===3){ellipse(77,-150,54,48,v.accent);rect(72,-140,10,126,'#d1b47a');poly([[-38,-205],[0,-278],[38,-205]],v.accent);}
+  if(variant%2)rect(-28,-175,56,7,v.accent);else ellipse(0,-150,25,12,v.accent);
+ }
  if(v.crown){poly([[-39,-209],[-48,-244],[-20,-232],[0,-260],[20,-232],[48,-244],[39,-209]],v.accent);ellipse(0,-231,10,13,'#c56370');}
  return shapes.map(shape=>shape.type==='polygon'?{...shape,points:shape.points.map(([x,y])=>[x*v.size,y*v.size])}:{...shape,x:shape.x*v.size,y:shape.y*v.size,width:shape.width*v.size,height:shape.height*v.size});
 }

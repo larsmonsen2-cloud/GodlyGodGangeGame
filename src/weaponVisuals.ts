@@ -34,7 +34,27 @@ const ART: Record<typeof WEAPONS[WeaponId]['visual'], WeaponShape[]> = {
     ...crystal('#b08aed', -118, 44, 58), rect('#d7b471', -13, -53, 26, 7), rect('#d7b471', -11, -13, 22, 6),
     polygon('#eadcff', [[-41, -133], [-38, -125], [-30, -122], [-38, -119], [-41, -111], [-44, -119], [-52, -122], [-44, -125]]), ellipse('#eadcff', 40, -90, 6, 6)],
 };
-export const weaponShapes = (id: WeaponId) => ART[WEAPONS[id].visual];
+export const weaponShapes = (id: WeaponId):WeaponShape[] => {
+ const w=WEAPONS[id];if(w.tier<4)return ART[w.visual];
+ const tier=w.tier, length=100+tier*2, breadth=16+tier*1.3;
+ const metal=['#b6ccd1','#dab978','#b7a7df','#86caca'][tier%4], glow=tier>13?.25:.12;
+ const shapes:WeaponShape[]=[...handle];
+ if(w.kind==='melee') {
+  const silhouette=/øks|kløyver|sigd/.test(w.name)?2:/hammer|klubbe|anker/.test(w.name)?0:1;
+  if(silhouette===0)shapes.push(rect(metal,-breadth,-length,breadth*2,42),polygon('#eef2e5',[[-breadth,-length],[-breadth-12,-length+28],[-breadth,-length+42]]),rect('#6e7784',-6,-length,12,length-20));
+  else if(silhouette===1)shapes.push(polygon(metal,[[-9,-20],[-10,-length],[0,-length-18],[10,-length],[9,-20]]),polygon('#edf1df',[[0,-length-12],[3,-25],[7,-length]]));
+  else shapes.push(rect('#74808f',-6,-length,12,length-20),polygon(metal,[[-4,-length],[breadth+15,-length-12],[breadth+24,-length+36],[-4,-length+54]]));
+ } else {
+  shapes.push(rect('#65527a',-6,-length,12,length+24),ellipse(metal,0,-length,60+tier,46+tier,glow));
+  if(tier%3===0)shapes.push(ellipse(metal,0,-length,50,50),ellipse('#283b50',0,-length,32,32),...crystal('#edf1ff',-length,15,26));
+  else if(tier%3===1)shapes.push(...crystal(metal,-length,32+tier,42+tier),polygon(metal,[[-32,-length+12],[-26,-length-29],[-19,-length+14],[19,-length+14],[26,-length-29],[32,-length+12],[0,-length+36]]));
+  else shapes.push(rect(metal,-32,-length-19,64,40),rect('#eee4c9',-24,-length-13,48,28),rect('#65527a',-2,-length-16,4,34));
+ }
+ for(let i=0;i<Math.floor(tier/4);i++)shapes.push(ellipse('#fff0b6',i%2?-22:22,-40-i*22,7,9));
+ if(tier>=12)shapes.push(polygon(metal,[[-16,-30],[-44,-57],[-36,-23],[0,-10],[36,-23],[44,-57],[16,-30]]));
+ if(tier>=17)shapes.push(ellipse(metal,-43,-length+15,16,16),ellipse(metal,43,-length+15,16,16),polygon('#eadfff',[[0,-length-38],[-9,-length-24],[0,-length-10],[9,-length-24]]));
+ return shapes;
+};
 export const weaponEffectColor = (id: WeaponId) => {
   const visual = WEAPONS[id].visual;
   return visual === 'inferno' ? 0xffae55 : visual === 'storm' ? 0x85d7ff : visual === 'apprentice' ? 0x91e4c9 : WEAPONS[id].kind === 'magic' ? 0xc6b5ff : 0xffdf8b;

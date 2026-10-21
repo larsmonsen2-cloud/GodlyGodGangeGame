@@ -1,4 +1,4 @@
-# Gangriket – fase 9
+# Gangriket – ti arenaer
 
 Et mobilvennlig fantasyspill for den lille gangetabellen. Lag en helt, velg klær, besøk heltesiden og tren mot en svært tålmodig dummy.
 
@@ -131,3 +131,7 @@ Butikken viser neste nærkampvåpen og neste magivåpen ut fra høyeste eide pro
 ## Nytt i fase 9
 
 Fem riktige på rad utløser ett dobbelt spesialangrep. Nivåskjoldet utvikles fra jern til magisk. Ingen avbrudd i treningen ved nivåøkning. 124 tester består. Se [beskrivelse og konfigurasjon](docs/special-level.md), [krav](docs/special-level-spec.md) og [verifikasjon](docs/verification.md). Fase 9 er foreløpig lokal.
+
+## Knusbare dukker og den store reisen
+
+Ti treningsranger med lagret dukkehelse og skadebasert bonus-XP, ti arenaer med hundre motstandere og tjue bosser, førti våpen og lagringsformat v7. Se [regler og arkitektur](docs/expansion.md), [balanse](docs/arena-balance.md) og [verifikasjon](docs/verification.md). 140 tester består. Eksisterende produksjonsprosjekt brukes.

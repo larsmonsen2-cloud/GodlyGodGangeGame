@@ -1,10 +1,11 @@
 import { CONFIG } from './config';
 import type { GameStore } from './store';
 
-export type Sound = 'hit' | 'magic' | 'hurt' | 'level' | 'victory';
+export type Sound = 'hit' | 'magic' | 'hurt' | 'level' | 'victory' | 'correct' | 'break' | 'boss';
 type PreferenceStore = Pick<Storage, 'getItem' | 'setItem'>;
 const KEY = 'gangriket.sound';
 const notes: Record<Sound, readonly number[]> = {
+  correct:[660,880],break:[330,523,784],boss:[392,523,659,784,1047,1318],
   hit: [160, 90], magic: [440, 660, 880], hurt: [110, 70],
   level: [523, 659, 784], victory: [523, 659, 784, 1047],
 };
@@ -72,8 +73,10 @@ export function bindSound(store: GameStore, audio: Pick<SoundEngine, 'play' | 's
   return store.subscribe(() => {
     const state = store.getSnapshot();
     if (state.screen !== previous.screen || (state.combat?.paused && !previous.combat?.paused)) audio.stop();
+    if(state.feedback==='correct'&&previous.feedback!=='correct')audio.play('correct');
+    if(state.purchase&&state.purchase!==previous.purchase)audio.play('level');
     if (state.levelUp && state.levelUp !== previous.levelUp) audio.play('level');
-    if (state.combat?.outcome === 'won' && state.combat.resultReady && !previous.combat?.resultReady) audio.play('victory');
+    if (state.combat?.outcome === 'won' && state.combat.resultReady && !previous.combat?.resultReady) audio.play(state.combat.reward?.bonus?'boss':'victory');
     previous = state;
   });
 }

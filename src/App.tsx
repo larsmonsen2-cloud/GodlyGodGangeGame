@@ -1,3 +1,5 @@
+import {TrainingHud} from './TrainingHud';
+import {ARENAS,arenaIndex} from './arenas';
 import { LevelEmblem } from './LevelEmblem';
 import { SpecialMeter } from './SpecialMeter';
 import { WEAPONS } from './weapons';
@@ -95,20 +97,20 @@ export function App() {
     const equation = feedback === 'correct' || feedback === 'reveal';
     const wrong = feedback === 'first-error' || feedback === 'second-error';
     const locked = feedback !== 'answering' || !!state.combat?.paused || (arena && state.combat?.outcome !== 'active');
-    const message = feedback === 'correct' ? (arena ? 'Fulltreffer!' : 'Fulltreffer! +10 XP')
+    const message = feedback === 'correct' ? (arena ? 'Fulltreffer!' : `Fulltreffer! +${CONFIG.progression.xpPerAnswer+(state.trainingReward?.bonus??0)} XP`)
       : feedback === 'reveal' ? 'Riktig svar · Ta den tiden du trenger.'
       : wrong ? (feedback === 'first-error' ? 'Ikke helt. Prøv én gang til!' : 'Vi ser på svaret sammen.')
       : mistakes ? 'Du klarer det. Prøv igjen!' : 'Regn ut og send helten i angrep.';
     return <main className={`training-shell ${arena ? 'arena-shell' : ''} ${state.hero.savingGoal ? 'has-saving-goal' : ''}`} style={timings}>
       <header className="training-header">
         <button type="button" className="back-button" onClick={() => game.leaveTraining()} aria-label="Tilbake til helten">← <span>Helten</span></button>
-        <div className="training-title"><span className="eyebrow">{arena ? `KAMP ${enemy?.number} AV 10` : 'SKOGLYSNINGEN'}</span><h1>{arena ? enemy?.name : 'Treningsplassen'}</h1></div>
+        <div className="training-title"><span className="eyebrow">{arena ? `${ARENAS[arenaIndex(enemy!.number)].name} · ${(enemy!.number-1)%10+1}/10` : 'SKOGLYSNINGEN'}</span><h1>{arena ? enemy?.name : 'Treningsplassen'}</h1></div>
         <div className="play-controls"><SoundButton />{arena ? <button className="pause-button" disabled={state.combat?.outcome !== 'active'} onClick={() => game.pauseArena()}>Pause</button> : null}</div>
       </header>
       <section className="battle-region" aria-label="Spillområde">
-        {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}
+        {!arena && <TrainingHud training={state.hero.training} reward={state.trainingReward}/>}
         <SceneView key={`${state.activeHeroId}-${state.sessionId}`} appearance={state.hero.appearance} color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
-        {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><LevelEmblem level={state.levelUp} compact/><div><strong>Nivå opp!</strong><small>Nytt egenskapspoeng</small></div></div>}
+        {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><LevelEmblem level={state.levelUp} compact/><div><strong>Nivå opp!</strong><small>Egenskapspoeng klare</small></div></div>}
         {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
         <SpecialMeter streak={state.streak} flash={state.specialFlash} brokenFrom={state.brokenFrom} magic={WEAPONS[state.hero.weapon].kind==='magic'} questionId={question.id}/>
         <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>
