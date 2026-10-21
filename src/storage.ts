@@ -1,3 +1,4 @@
+import { isNextOffer } from './shop';
 import { normalizeAppearance, validAppearance } from './appearance';
 import { normalizeReputation } from './reputation';
 import { ENEMIES, isEnemyId } from './enemies';
@@ -7,9 +8,9 @@ import { WEAPONS, xpNeeded, type Hero } from './progression';
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
-export type StorageStatus = 'saved' | 'session' | 'invalid';
+export type StorageStatus = 'saved' | 'session' | 'invalid' | 'blocked';
 function validCore(value: unknown): value is Hero {
   if (!value || typeof value !== 'object') return false;
   const h = value as Hero;
@@ -56,30 +57,82 @@ function restoreEquipment(h: Hero, version: number): Hero {
   const savingGoal = isWeaponId(h.savingGoal) && WEAPONS[h.savingGoal].tier > 0 && !ownedWeapons.includes(h.savingGoal) ? h.savingGoal : null;
   return { ...h, weapon, ownedWeapons, savingGoal };
 }
-export function loadHero(storage: SaveStorage | null): { hero: Hero | null; status: StorageStatus; notice?: string } {
-  if (!storage) return { hero: null, status: 'session' };
-  let raw: string | null;
-  try { raw = storage.getItem(SAVE_KEY); }
-  catch { return { hero: null, status: 'session' }; }
-  try {
-    if (raw === null) return { hero: null, status: 'saved' };
-    const save = JSON.parse(raw);
-    if (![1,2,3,SAVE_VERSION].includes(save?.version) || !validCore(save.hero)) return { hero: null, status: 'invalid' };
-    const restored = restoreArena(restoreEquipment(save.hero, save.version), save.version);
-    const appearance = normalizeAppearance(save.version < 4 ? null : restored.appearance, restored.color);
-    const hero = {...restored, appearance, color: appearance.clothes, reputation: normalizeReputation(restored,save.version<4)};
-    const repaired = save.version === 1 ? !isStarterId(save.hero.weapon) : save.version === 2 ? !validEquipment(save.hero) : save.version === 3 ? !validPreviousHero(save.hero) : !validHero(save.hero);
-    const changed = save.version !== SAVE_VERSION || repaired;
-    return { hero, status: changed ? saveHero(storage, hero) : 'saved',
-      ...(repaired ? { notice: 'Ukjente eller ugyldige heltedata ble reparert. Øvrig fremgang er beholdt.' } : {}) };
-  } catch { return { hero: null, status: 'invalid' }; }
+
+export type HeroProfile = { id: string; hero: Hero; notice?: string };
+export type HeroLibrary = { profiles: HeroProfile[]; lastHeroId: string | null; rejectedProfiles: unknown[] };
+export const BACKUP_KEY = 'gangriket.save.before-profiles';
+export const newProfileId = () => crypto.randomUUID();
+const emptyLibrary = (): HeroLibrary => ({ profiles: [], lastHeroId: null, rejectedProfiles: [] });
+const goalMessage = 'Butikken viser nå neste oppgradering. Det gamle sparemålet er fjernet; velg gjerne et nytt.';
+function restoreHero(value: unknown, version: number): Hero | null {
+  if (!validCore(value)) return null;
+  const restored = restoreArena(restoreEquipment(value, version), version);
+  const appearance = normalizeAppearance(version < 4 ? null : restored.appearance, restored.color);
+  return {...restored, appearance, color: appearance.clothes, reputation: normalizeReputation(restored, version < 5)};
 }
-export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {
+function restoreProfile(hero: Hero, id: string, notice?: string): HeroProfile {
+  if (hero.savingGoal && !isNextOffer(hero, hero.savingGoal)) return {id, hero:{...hero,savingGoal:null}, notice:goalMessage};
+  return {id,hero,...(notice ? {notice} : {})};
+}
+export function saveLibrary(storage: SaveStorage | null, library: HeroLibrary): StorageStatus {
   try {
     if (!storage) return 'session';
-    storage.setItem(SAVE_KEY, JSON.stringify({ version: SAVE_VERSION, hero }));
+    storage.setItem(SAVE_KEY, JSON.stringify({version:SAVE_VERSION,...library}));
     return 'saved';
   } catch { return 'session'; }
+}
+export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status: StorageStatus; notice?: string } {
+  const empty=emptyLibrary();
+  if (!storage) return {...empty,status:'session'};
+  let raw: string | null;
+  try {raw=storage.getItem(SAVE_KEY);} catch {return {...empty,status:'session'};}
+  if (raw===null) return {...empty,status:'saved'};
+  try {
+    const save=JSON.parse(raw);
+    let library:HeroLibrary;
+    let repaired=false;
+    if ([1,2,3,4].includes(save?.version)) {
+      const hero=restoreHero(save.hero,save.version);
+      if (!hero) return {...empty,status:'blocked'};
+      const id=newProfileId();
+      const profile=restoreProfile(hero,id);
+      repaired=save.version>=4 ? !validHero(save.hero) : save.version===3 ? !validPreviousHero(save.hero) : save.version===2 ? !validEquipment(save.hero) : !isStarterId(save.hero.weapon);
+      library={profiles:[profile],lastHeroId:id,rejectedProfiles:[]};
+    } else if (save?.version===SAVE_VERSION && Array.isArray(save.profiles)) {
+      const profiles:HeroProfile[]=[], rejectedProfiles:unknown[]=Array.isArray(save.rejectedProfiles)?save.rejectedProfiles:[];
+      const ids=new Set<string>();
+      for (const value of save.profiles) {
+        const hero=restoreHero(value?.hero,5);
+        if (!hero) {rejectedProfiles.push(value);repaired=true;continue;}
+        let id=value.id;
+        if(typeof id!=='string'||!id||ids.has(id)){id=newProfileId();repaired=true;}
+        ids.add(id);
+        profiles.push(restoreProfile(hero,id,typeof value.notice==='string'?value.notice:undefined));
+        if (!validHero(value.hero)) repaired=true;
+      }
+      if (!profiles.length && rejectedProfiles.length) return {...empty,status:'blocked'};
+      library={profiles,lastHeroId:profiles.some(p=>p.id===save.lastHeroId)?save.lastHeroId:profiles[0]?.id??null,rejectedProfiles};
+    } else return {...empty,status:'blocked'};
+    const changed=JSON.stringify({version:SAVE_VERSION,...library})!==raw;
+    if(changed) {
+      // Backup must succeed BEFORE replacing any old data. No overwriting on failed migration.
+      if(storage.getItem(BACKUP_KEY)===null)storage.setItem(BACKUP_KEY,raw);
+      if(saveLibrary(storage,library)!=='saved')return {...empty,status:'blocked'};
+    }
+    return {...library,status:'saved',...(repaired?{notice:'Noen lagrede data ble reparert. Gyldige helter og fremgang er beholdt.'}:{})};
+  } catch {return {...empty,status:'blocked'};}
+}
+// Compatibility helpers for focused rule tests and single-profile fixtures.
+// Runtime always writes the full authoritative library via saveLibrary.
+export function loadHero(storage: SaveStorage | null): {hero:Hero|null;status:StorageStatus;notice?:string} {
+ const saved=loadLibrary(storage);const profile=saved.profiles.find(p=>p.id===saved.lastHeroId);
+ return {hero:profile?.hero??null,status:saved.status,notice:profile?.notice??saved.notice};
+}
+export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {
+ const saved=loadLibrary(storage);if(saved.status==='blocked')return 'blocked';
+ const id=saved.lastHeroId??newProfileId();
+ const profiles=saved.profiles.length?saved.profiles.map(p=>p.id===id?{...p,hero}:p):[{id,hero}];
+ return saveLibrary(storage,{profiles,lastHeroId:id,rejectedProfiles:saved.rejectedProfiles});
 }
 export function browserStorage(): SaveStorage | null {
   try { return window.localStorage; } catch { return null; }

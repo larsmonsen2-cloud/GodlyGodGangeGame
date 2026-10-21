@@ -91,3 +91,18 @@ Ingen push eller produksjonsdeploy for fase 6. Fase 5 ble separat publisert ette
 - [x] Spesifikasjon, regelbeskrivelse og verifisering oppdatert.
 
 Fase 5 og 6 er senere publisert etter separate bestillinger. Fase 7 er ikke pushet eller publisert.
+
+## Fase 8 – implementert lokalt
+
+- [x] Heltevelger med faktisk figur, tittel, nivå, arenafremgang og sist-valgt-markering.
+- [x] Flere profiler med unik ID; samme navn tillatt, opprettelse med Avbryt.
+- [x] Separat fremgang og full opprydding ved heltebytte.
+- [x] Versjon 5 med lokal sikkerhetskopi, idempotent migrering og gjenopprettingsskjerm ved feil.
+- [x] Bevaring av gyldige profiler dersom en annen er ugyldig.
+- [x] Ett neste tilbud per serie, styrt av eksplisitt tier og høyeste eierskap.
+- [x] Kjøpskontroll med helte-ID, butikkøkt, pris, eierskap og aktuelt tilbud.
+- [x] Egen utstyrsvisning, gratis bytte og tilpassede individuelle sparemål.
+- [x] Kjøpsfeiring og beskyttelse mot dobbelttrykk på neste tilbud.
+- [x] 101 tester, produksjonsbygg og isolert nettleserflyt på mobil/PC.
+
+Fase 7 er publisert etter egen beskjed. Ingen push eller deploy av fase 8.

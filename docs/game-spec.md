@@ -511,3 +511,9 @@ Full bestilling finnes i `arena-progression-spec.md`. Faktiske verdier, modell o
 Bestillingen i character-spec.md er implementert. Karakterbyggeren bruker seks kosmetikkategorier og samme figurrigg som resten av spillet. Utseenderedigering er midlertidig frem til Lagre og endrer ingen spillverdier. Heltesiden har en poengbasert profil, fem varige pompøsitetstrinn og en deterministisk kort krønike. Bare registrerte seire gir bragdtekst.
 
 Detaljerte regler, nivågrenser, bragdprioritet og lagringsversjon 4 er dokumentert i character-system.md. Rykteoppdatering fra trening utsettes til heltesiden; bossoppdatering vises i eksisterende seier. Byggeren kan scrolle, og spillhandlingene er faste nederst på mobilheltesiden. Eksisterende regne-, pause-, poeng- og balanseregler beholdes.
+
+## Implementert tillegg: fase 8 – flere helter og fokusert butikk
+
+Gjeldende tillegg er profiles-shop-spec.md. profiles-shop.md beskriver implementasjonen og lagringsformatet. Versjon 5 lagrer separate helteprofiler og sist valgt ID. Oppstart viser velgeren, og Bytt helt finnes på heltesiden. Gamle lagringsdata sikkerhetskopieres før migrering, med feilskjerm og ny prøve ved skrivefeil.
+
+Butikkens tidligere frie kjøp av senere våpen erstattes av ett neste tilbud per serie basert på høyeste eide tier. Tidligere direktekjøp beholdes. Mitt utstyr viser egne våpen, og nye sparemål må være aktuelle tilbud. Ingen konto, sletting, nye våpen eller kampbalanse er innført.

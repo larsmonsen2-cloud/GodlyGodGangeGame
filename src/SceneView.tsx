@@ -11,9 +11,9 @@ import { weaponEffectColor } from './weaponVisuals';
 import type { WeaponId } from './progression';
 import { sound } from './sound';
 
-type Props = { appearance?: Appearance; color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; enemyId?: EnemyId; encounter?: number; reduced: boolean };
+type Props = { thumbnail?: boolean; appearance?: Appearance; color: HeroColor; weapon?: WeaponId; training?: boolean; arena?: boolean; enemyId?: EnemyId; encounter?: number; reduced: boolean };
 
-export function SceneView({ color, appearance = DEFAULT_APPEARANCE, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
+export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEARANCE, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
@@ -128,7 +128,7 @@ export function SceneView({ color, appearance = DEFAULT_APPEARANCE, weapon = 'st
       }
     }
     const instance = new Phaser.Game({
-      type: Phaser.AUTO,
+      type: thumbnail ? Phaser.CANVAS : Phaser.AUTO,
       parent: host.current,
       width: training ? 720 : 600,
       height: training ? 420 : 560,
@@ -154,7 +154,7 @@ export function SceneView({ color, appearance = DEFAULT_APPEARANCE, weapon = 'st
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [color, appearance, weapon, training, arena, enemyId, encounter, reduced]);
+  }, [thumbnail, color, appearance, weapon, training, arena, enemyId, encounter, reduced]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
     role="img" aria-label={`${arena ? `Helten mot ${enemyById(enemyId).name}` : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;

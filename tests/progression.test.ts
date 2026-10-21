@@ -32,7 +32,7 @@ describe('Progression and damage', () => {
   });
   it('awards XP exactly once and continues answering while the level graphic is visible', () => {
     vi.useFakeTimers();
-    const store = new GameStore(() => 0, memory());
+    const store = selectLast(new GameStore(() => 0, memory()));
     store.createHero('Sol', 'forest', 'wand'); store.startTraining();
     const hit = vi.fn(); store.onAttack(hit);
     for (let i = 0; i < 5; i++) {
@@ -59,7 +59,7 @@ describe('Progression and damage', () => {
   });
   it('gives no XP for errors or revealed answers, but rewards a corrected first error', () => {
     vi.useFakeTimers();
-    const store = new GameStore(() => 0);
+    const store = selectLast(new GameStore(() => 0));
     store.createHero('Sol', 'sky'); store.startTraining();
     for (let i = 0; i < 2; i++) { store.digit('2'); store.submit(); vi.advanceTimersByTime(CONFIG.timing.wrong); }
     store.next();
@@ -76,11 +76,11 @@ describe('Progression and damage', () => {
 describe('Versioned local saves', () => {
   it('saves the weapon chosen during creation and rejects invalid choices', () => {
     const storage = memory();
-    const store = new GameStore(Math.random, storage);
+    const store = selectLast(new GameStore(Math.random, storage));
     expect(store.createHero('Sol', 'sky', 'unknown' as 'wand')).toBe(false);
     expect(store.createHero('Sol', 'sky', 'wand')).toBe(true);
     expect(store.createHero('Sol', 'sky', 'stick')).toBe(false);
-    const restored = new GameStore(Math.random, storage);
+    const restored = selectLast(new GameStore(Math.random, storage));
     expect(restored.getSnapshot().hero?.weapon).toBe('wand');
     store.dispose(); restored.dispose();
   });
@@ -90,10 +90,10 @@ describe('Versioned local saves', () => {
     const storage = memory();
     const trained = { ...spendPoint(grantXp(hero(), 125), 'magic'), weapon: 'wand' as const, ownedWeapons: ['wand' as const], gold: 25 };
     expect(saveHero(storage, trained)).toBe('saved');
-    const store = new GameStore(() => 0, storage);
+    const store = selectLast(new GameStore(() => 0, storage));
     expect(store.getSnapshot()).toMatchObject({ screen: 'hero', question: null, hero: acknowledgeReputation(trained) });
     store.spend('maxHealth'); store.startTraining(); store.digit('1'); store.submit();
-    const reloaded = new GameStore(Math.random, storage);
+    const reloaded = selectLast(new GameStore(Math.random, storage));
     expect(reloaded.getSnapshot()).toMatchObject({ screen: 'hero', feedback: 'answering', levelUp: null, hero: { xp: 15, level: 3, points: 0, maxHealth: 50, magic: 7, weapon: 'wand', gold: 25 } });
     store.dispose(); reloaded.dispose();
   });
@@ -101,7 +101,7 @@ describe('Versioned local saves', () => {
     const storage = memory();
     for (const raw of ['{', 'null', JSON.stringify({ version: 99, hero: hero() }), JSON.stringify({ version: SAVE_VERSION, hero: { ...hero(), points: 10 } })]) {
       storage.setItem(SAVE_KEY, raw);
-      expect(loadHero(storage)).toEqual({ hero: null, status: 'invalid' });
+      expect(loadHero(storage)).toEqual({ hero: null, status: 'blocked' });
     }
     for (const patch of [{ xp: 50 }, { strength: 6 }, { gold: -1 }, { level: Infinity }, { weapon: 'unknown' }, { name: 'x'.repeat(21) }, { magic: NaN }, { color: 'orange' }]) {
       expect(validHero({ ...hero(), ...patch })).toBe(false);
@@ -110,10 +110,13 @@ describe('Versioned local saves', () => {
   it('keeps play working and warns when storage throws on reading or writing', () => {
     const storage = { getItem() { throw Error('blocked'); }, setItem() { throw Error('quota'); } };
     expect(loadHero(storage)).toEqual({ hero: null, status: 'session' });
-    const store = new GameStore(Math.random, storage);
+    const store = selectLast(new GameStore(Math.random, storage));
     expect(store.createHero('Sol', 'forest')).toBe(true);
     expect(store.getSnapshot()).toMatchObject({ screen: 'hero', storageStatus: 'session', hero: { name: 'Sol' } });
     store.dispose();
   });
 });
 
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

@@ -38,33 +38,33 @@ describe('Shop rules and persistence',()=>{
   expect(restored.gold).toBe(450);
  });
  it('stores one goal, replaces or removes it and preserves unrelated goals on purchase',()=>{
-  let hero=setGoal(funded(500),'storm_staff');
-  hero=setGoal(hero,'cosmic_staff');
-  expect(hero.savingGoal).toBe('cosmic_staff');
-  hero=buyWeapon(hero,'iron_sword')!.hero;
-  expect(hero.savingGoal).toBe('cosmic_staff');
-  expect(setGoal(hero,'iron_sword')).toBe(hero);
+  let hero=setGoal(funded(500),'apprentice_staff');
+  hero=setGoal(hero,'iron_sword');
+  expect(hero.savingGoal).toBe('iron_sword');
+  hero=buyWeapon(hero,'apprentice_staff')!.hero;
+  expect(hero.savingGoal).toBe('iron_sword');
+  expect(setGoal(hero,'apprentice_staff')).toBe(hero);
   expect(setGoal(hero,'stick')).toBe(hero);
   expect(setGoal(hero,null).savingGoal).toBeNull();
  });
  it('guards double clicks at store level and restores all equipment after reload',()=>{
   const storage=memory();saveHero(storage,funded(125));
-  const game=new GameStore(()=>0,storage);game.openShop();game.chooseGoal('storm_staff');
-  expect(game.buy('iron_sword')).toBe(true);expect(game.buy('apprentice_staff')).toBe(false);
-  game.finishShoppingCelebration();expect(game.buy('iron_sword')).toBe(false);
-  game.equip('wand');
-  const reload=new GameStore(()=>0,storage);
-  expect(reload.getSnapshot().hero).toMatchObject({gold:75,weapon:'wand',ownedWeapons:['wand','iron_sword'],savingGoal:'storm_staff'});
+  const game=selectLast(new GameStore(()=>0,storage));game.openShop();game.chooseGoal('apprentice_staff',game.getShopContext());
+  expect(game.buy('iron_sword',game.getShopContext())).toBe(true);expect(game.buy('apprentice_staff',game.getShopContext())).toBe(false);
+  game.finishShoppingCelebration(game.getShopContext());expect(game.buy('iron_sword',game.getShopContext())).toBe(false);
+  game.equip('wand',game.getShopContext());
+  const reload=selectLast(new GameStore(()=>0,storage));
+  expect(reload.getSnapshot().hero).toMatchObject({gold:75,weapon:'wand',ownedWeapons:['wand','iron_sword'],savingGoal:'apprentice_staff'});
   expect(reload.getSnapshot().purchase).toBeNull();
   game.dispose();reload.dispose();
  });
  it('uses purchased weapons in training and arena and blocks shopping during combat',()=>{
   vi.useFakeTimers();const storage=memory();saveHero(storage,funded());
-  const game=new GameStore(()=>0,storage);game.openShop();game.buy('iron_sword');
+  const game=selectLast(new GameStore(()=>0,storage));game.openShop();game.buy('iron_sword',game.getShopContext());
   const attack=vi.fn();game.onAttack(attack);game.startTraining();game.digit('1');game.submit();
   expect(attack).toHaveBeenCalledWith(expect.objectContaining({damage:12,kind:'melee'}));
   expect(game.getSnapshot().hero?.gold).toBe(0);
-  game.leaveTraining();game.openArena(); game.selectEnemy('goran');game.startArena();game.openShop();game.equip('wand');
+  game.leaveTraining();game.openArena(); game.selectEnemy('goran');game.startArena();game.openShop();game.equip('wand',game.getShopContext());
   expect(game.getSnapshot().screen).toBe('arena');game.digit('1');game.submit();
   expect(game.getSnapshot().combat?.enemyHp).toBe(68);expect(game.getSnapshot().hero?.weapon).toBe('iron_sword');game.dispose();
  });
@@ -85,11 +85,14 @@ describe('Shop rules and persistence',()=>{
  });
  it('keeps an atomic purchase in session when writing storage fails',()=>{
   const storage=memory();saveHero(storage,funded());
-  const game=new GameStore(()=>0,{getItem:storage.getItem,setItem(){throw Error('quota');}});
-  game.openShop();game.buy('iron_sword');
+  const game=selectLast(new GameStore(()=>0,{getItem:storage.getItem,setItem(){throw Error('quota');}}));
+  game.openShop();game.buy('iron_sword',game.getShopContext());
   expect(game.getSnapshot()).toMatchObject({storageStatus:'session',hero:{gold:0,weapon:'iron_sword',ownedWeapons:['wand','iron_sword']}});game.dispose();
  });
  it('has six paid weapons with stable prices and damage tiers',()=>{
   expect(Object.values(WEAPONS).filter(w=>w.tier>0).map(w=>[w.price,w.damage])).toEqual([[50,7],[125,13],[250,22],[50,7],[125,13],[250,22]]);
  });
 });
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

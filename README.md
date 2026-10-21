@@ -119,3 +119,11 @@ Heltesiden viser en deterministisk tittel og kort krønike fra investerte poeng,
 Regler, konfigurasjonssteder og migrering: [docs/character-system.md](docs/character-system.md). Full bestilling: [docs/character-spec.md](docs/character-spec.md). 83 tester og produksjonsbygg består. Lokal prøve: npm run dev, eller npm run build og npm run preview.
 
 Publiseringsstatus: fase 5 og 6 ble senere publisert etter egne bestillinger. Fase 7 er bare lokal; de eldre fasenes notater om lokal levering beskriver status ved deres opprinnelige leveranse.
+
+## Fase 8 – flere helter og neste butikktilbud (lokalt)
+
+«Velg helt» vises ved oppstart. «Lag ny helt» og «Bytt helt» gir separate profiler med stabil ID, også ved like navn. All fremgang og utstyr er individuelt; lyd er felles på enheten. Versjon 5 tar lokal sikkerhetskopi før migrering av gammel enkelthelt og stopper trygt dersom migreringen ikke kan lagres.
+
+Butikken viser neste nærkampvåpen og neste magivåpen ut fra høyeste eide progresjonstrinn. Eide våpen finnes i «Mitt utstyr». Gamle kjøp beholdes; sparemål som ikke lenger er aktuelle tilbud fjernes med engangsmelding når de peker for langt frem.
+
+[Regler og lagring](docs/profiles-shop.md) · [Full bestilling](docs/profiles-shop-spec.md). 101 tester og produksjonsbygg består. Lokal server: npm run build og npm run preview. Fase 7 er publisert etter separat beskjed; fase 8 er ikke pushet eller publisert.

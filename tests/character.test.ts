@@ -6,7 +6,7 @@ import { GameStore } from '../src/store';
 import { loadHero, saveHero, SAVE_KEY } from '../src/storage';
 import { ENEMIES } from '../src/enemies';
 const memory=()=>{const map=new Map<string,string>();return {getItem:(k:string)=>map.get(k)??null,setItem:(k:string,v:string)=>{map.set(k,v);}}};
-function setup(hero=newHero('Sol','sky')) {const storage=memory();saveHero(storage,hero);return {storage,game:new GameStore(()=>0,storage)};}
+function setup(hero=newHero('Sol','sky')) {const storage=memory();saveHero(storage,hero);return {storage,game:selectLast(new GameStore(()=>0,storage))};}
 const settled=(hero:Hero):Hero=>({...hero,reputation:normalizeReputation(hero,true)});
 afterEach(()=>vi.useRealTimers());
 describe('Appearance and character editing',()=>{
@@ -17,7 +17,7 @@ describe('Appearance and character editing',()=>{
   expect(normalizeAppearance({skin:'unknown',hairColor:'silver'},'berry')).toMatchObject({skin:'sand',hairColor:'silver',clothes:'berry'});
  });
  it('creates only selected starter with appearance and rejects invalid creation',()=>{
-  const storage=memory(),game=new GameStore(()=>0,storage);const appearance={...DEFAULT_APPEARANCE,clothes:'violet' as const,detail:'beard' as const};
+  const storage=memory(),game=selectLast(new GameStore(()=>0,storage));const appearance={...DEFAULT_APPEARANCE,clothes:'violet' as const,detail:'beard' as const};
   expect(game.createHero('Sol','violet','wand',{...appearance,skin:'unknown'} as never)).toBe(false);
   expect(game.createHero('Sol','violet','wand',appearance)).toBe(true);
   expect(loadHero(storage).hero).toMatchObject({name:'Sol',weapon:'wand',ownedWeapons:['wand'],appearance,strength:5,magic:5,maxHealth:40});game.dispose();
@@ -28,7 +28,7 @@ describe('Appearance and character editing',()=>{
   game.leaveTraining();expect(game.getSnapshot().appearanceDraft).toBeNull();expect(game.getSnapshot().hero).toEqual(before);game.dispose();
  });
  it('saves only cosmetics, preserves purchased equipment, progress and damage, and keeps bald hair color',()=>{
-  const hero=settled({...grantXp(newHero('Sol','sky'),120),gold:99,weapon:'inferno_blade',ownedWeapons:['stick','inferno_blade'],savingGoal:'storm_staff',defeatedEnemies:['goran']});
+  const hero=settled({...grantXp(newHero('Sol','sky'),120),gold:99,weapon:'inferno_blade',ownedWeapons:['stick','inferno_blade'],savingGoal:'apprentice_staff',defeatedEnemies:['goran']});
   const {game,storage}=setup(hero);game.openAppearance();const appearance={...hero.appearance,hairStyle:'bald' as const,hairColor:'red' as const,clothes:'ember' as const};game.editAppearance(appearance);expect(game.saveAppearance()).toBe(true);
   const after=game.getSnapshot().hero!;expect(after).toEqual({...hero,appearance,color:'ember'});expect(damageFor(after)).toBe(damageFor(hero));expect(loadHero(storage).hero).toEqual(after);
   game.openAppearance();game.editAppearance({...appearance,hairStyle:'long'});expect(game.getSnapshot().appearanceDraft?.hairColor).toBe('red');game.leaveTraining();game.startTraining();game.openAppearance();expect(game.getSnapshot().screen).toBe('training');expect(game.saveAppearance()).toBe(false);game.dispose();
@@ -56,11 +56,11 @@ describe('Deterministic hero chronicles',()=>{
  it('defers training reputation until hero screen, then acknowledges it once',()=>{
   vi.useFakeTimers();const h=settled({...newHero('Sol','sky'),level:2,xp:60,points:1});const {game,storage}=setup(h);game.startTraining();game.digit('1');game.submit();
   expect(game.getSnapshot().hero?.level).toBe(3);expect(game.getSnapshot().reputationNotice).toBeNull();vi.advanceTimersByTime(1200);expect(game.getSnapshot().screen).toBe('training');expect(game.getSnapshot().feedback).toBe('answering');expect(game.getSnapshot().reputationNotice).toBeNull();
-  game.leaveTraining();expect(game.getSnapshot().reputationNotice).toBeTruthy();game.dismissReputation();game.startTraining();game.leaveTraining();expect(game.getSnapshot().reputationNotice).toBeNull();const reload=new GameStore(()=>0,storage);expect(reload.getSnapshot().reputationNotice).toBeNull();game.dispose();reload.dispose();
+  game.leaveTraining();expect(game.getSnapshot().reputationNotice).toBeTruthy();game.dismissReputation();game.startTraining();game.leaveTraining();expect(game.getSnapshot().reputationNotice).toBeNull();const reload=selectLast(new GameStore(()=>0,storage));expect(reload.getSnapshot().reputationNotice).toBeNull();game.dispose();reload.dispose();
  });
  it('shows one final boss update only after feedback, even when already tier five',()=>{
   vi.useFakeTimers();const hero=settled({...newHero('Sol','sky'),level:101,strength:205,defeatedEnemies:ENEMIES.slice(0,4).map(e=>e.id)});const {game,storage}=setup(hero);game.openArena();game.selectEnemy('buldre');game.startArena();game.digit('1');game.submit();vi.advanceTimersByTime(1200);game.digit('1');game.submit();expect(game.getSnapshot().reputationNotice).toBeNull();vi.advanceTimersByTime(1200);expect(game.getSnapshot().reputationNotice).toContain('Baronvelteren');
-  game.startArena();for(let i=0;i<2;i++){game.digit('1');game.submit();vi.advanceTimersByTime(1200);}expect(game.getSnapshot().reputationNotice).toBeNull();const reload=new GameStore(()=>0,storage);expect(reload.getSnapshot().reputationNotice).toBeNull();game.dispose();reload.dispose();
+  game.startArena();for(let i=0;i<2;i++){game.digit('1');game.submit();vi.advanceTimersByTime(1200);}expect(game.getSnapshot().reputationNotice).toBeNull();const reload=selectLast(new GameStore(()=>0,storage));expect(reload.getSnapshot().reputationNotice).toBeNull();game.dispose();reload.dispose();
  });
  it('updates profile silently while allocating points',()=>{
   const {game}=setup(settled(grantXp(newHero('Sol','sky'),50)));game.spend('magic');expect(heroProfile(game.getSnapshot().hero!)).toBe('magic');expect(game.getSnapshot().reputationNotice).toBeNull();game.dispose();
@@ -69,9 +69,12 @@ describe('Deterministic hero chronicles',()=>{
 describe('Version four migration',()=>{
  it('preserves v3 purchases, arena, goals, settings and clothing without replaying old milestones',()=>{
   const storage=memory();const h={...grantXp(newHero('Sol','berry'),1000),gold:175,weapon:'storm_staff',ownedWeapons:['stick','storm_staff'],savingGoal:'inferno_blade',defeatedEnemies:ENEMIES.map(e=>e.id),claimedBossBonuses:['buldre','klask']};const {appearance,reputation,...old}=h;
-  storage.setItem(SAVE_KEY,JSON.stringify({version:3,hero:old}));storage.setItem('gangriket.sound','true');const hero=loadHero(storage).hero!;expect(hero).toMatchObject(old);expect(hero.appearance.clothes).toBe('berry');expect(hero.reputation).toEqual({highestTier:5,seenTier:5,seenBoss:'klask'});const game=new GameStore(()=>0,storage);expect(game.getSnapshot().reputationNotice).toBeNull();expect(storage.getItem('gangriket.sound')).toBe('true');game.dispose();
+  storage.setItem(SAVE_KEY,JSON.stringify({version:3,hero:old}));storage.setItem('gangriket.sound','true');const hero=loadHero(storage).hero!;expect(hero).toMatchObject({...old,savingGoal:null});expect(hero.appearance.clothes).toBe('berry');expect(hero.reputation).toEqual({highestTier:5,seenTier:5,seenBoss:'klask'});const game=selectLast(new GameStore(()=>0,storage));expect(game.getSnapshot().reputationNotice).toBeNull();expect(storage.getItem('gangriket.sound')).toBe('true');game.dispose();
  });
  it('repairs missing visual variants without deleting progress',()=>{
   const storage=memory();const hero={...newHero('Sol','sky'),gold:250,appearance:{skin:'missing',hairStyle:'long',hairColor:'red',expression:'proud',detail:'paint',clothes:'missing'}};storage.setItem(SAVE_KEY,JSON.stringify({version:4,hero}));const result=loadHero(storage);expect(result.hero).toMatchObject({gold:250,name:'Sol',appearance:{skin:'sand',clothes:'sky',hairStyle:'long',detail:'paint'}});expect(result.notice).toBeTruthy();
  });
 });
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

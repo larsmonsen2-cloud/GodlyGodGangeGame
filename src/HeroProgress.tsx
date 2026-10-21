@@ -21,7 +21,7 @@ export function StorageNotice({ status }: { status: StorageStatus }) {
   if (status === 'saved') return null;
   return <p className="storage-notice" role="status">{status === 'session'
     ? 'Kan ikke lagre. Fremgangen beholdes bare i denne økten.'
-    : 'Den lagrede helten kunne ikke leses. Du kan lage en ny.'}</p>;
+    : 'Lagringen kunne ikke åpnes trygt. Originalen er beholdt. Prøv igjen.'}</p>;
 }
 
 export function Progress({ hero, training = false, status = 'saved' }: { hero: Hero; training?: boolean; status?: StorageStatus }) {
@@ -57,6 +57,7 @@ export function HeroProgress({ hero, status, reputationNotice }: { hero: Hero; s
     <StorageNotice status={status} />
     <div className="hero-actions"><button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button><button className="primary arena-button" type="button" onClick={() => game.openArena()}><span>Arena</span><span aria-hidden="true">⚔</span></button><button className="primary shop-button" type="button" onClick={() => game.openShop()}><span>Butikk</span><span aria-hidden="true">◇</span></button></div>
     <button className="edit-appearance" type="button" onClick={()=>game.openAppearance()}>Endre utseende</button>
+    <button className="edit-appearance" type="button" onClick={()=>game.openHeroes()}>Bytt helt</button>
     {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
       <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>
       <div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => game.spend(key)}>

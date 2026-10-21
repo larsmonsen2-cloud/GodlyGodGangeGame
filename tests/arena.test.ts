@@ -12,7 +12,7 @@ describe('Arena combat', () => {
     vi.useFakeTimers();
     const values = new Map<string, string>();
     storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => { values.set(key, value); } };
-    game = new GameStore(() => 0, storage);
+    game = selectLast(new GameStore(() => 0, storage));
     game.createHero('Sol', 'forest');
     game.openArena(); game.selectEnemy('goran');
   });
@@ -101,7 +101,7 @@ describe('Arena combat', () => {
   });
   it('restores the hero but never restores a fight or grants a reload reward', () => {
     game.startArena(); answer();
-    const reload = new GameStore(() => 0, storage);
+    const reload = selectLast(new GameStore(() => 0, storage));
     expect(reload.getSnapshot()).toMatchObject({ screen: 'hero', combat: null, question: null, hero: { gold: 0, xp: 0 } });
     reload.dispose();
     game.leaveTraining(); game.openArena(); game.selectEnemy('goran'); game.startArena();
@@ -114,7 +114,7 @@ describe('Arena combat', () => {
     let hero = grantXp(newHero('Sol', 'sky', 'wand'), 120);
     hero = spendPoint(spendPoint(hero, 'magic'), 'maxHealth');
     saveHero(storage, { ...hero, weapon: 'wand' });
-    game = new GameStore(() => 0, storage); game.openArena(); game.selectEnemy('goran'); game.startArena();
+    game = selectLast(new GameStore(() => 0, storage)); game.openArena(); game.selectEnemy('goran'); game.startArena();
     const attack = vi.fn(); game.onAttack(attack); game.spend('strength'); answer();
     expect(game.getSnapshot().combat).toMatchObject({ hp: 50, enemyHp: 70 });
     expect(attack).toHaveBeenCalledWith(expect.objectContaining({ kind: 'magic', damage: 10 }));
@@ -129,3 +129,6 @@ describe('Arena combat', () => {
   });
 });
 
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

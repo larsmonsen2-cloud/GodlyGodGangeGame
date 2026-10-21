@@ -18,7 +18,7 @@ function ChoiceIcon({category,id}:{category:keyof Appearance;id:string}) {
  {category==='detail'&&id==='paint'&&<path d="M10 29l9 4m10 0l9-4" stroke="#648cb7" strokeWidth="4"/>}
  </svg>;
 }
-export function CharacterBuilder({hero,draft,status,reduced}:{hero:Hero|null;draft:Appearance|null;status:StorageStatus;reduced:boolean}) {
+export function CharacterBuilder({hero,draft,status,reduced,canCancel=false}:{canCancel?:boolean;hero:Hero|null;draft:Appearance|null;status:StorageStatus;reduced:boolean}) {
  const [appearance,setAppearance]=useState<Appearance>({...DEFAULT_APPEARANCE});
  const [name,setName]=useState('');const [weapon,setWeapon]=useState<StarterId>('stick');const [error,setError]=useState('');
  const selected=hero?draft??hero.appearance:appearance;
@@ -34,6 +34,6 @@ export function CharacterBuilder({hero,draft,status,reduced}:{hero:Hero|null;dra
  {'value' in option?<span className="cosmetic-swatch" style={{'--swatch':option.value} as CSSProperties}/>:<ChoiceIcon category={category} id={option.id}/>}
  <span>{option.name}</span><b className="choice-check" aria-hidden="true">{selected[category]===option.id?'✓':''}</b></button>)}</div></fieldset></details>;
  })}
- <StorageNotice status={status}/><div className="builder-actions"><button className="primary" type="submit">{hero?'Lagre utseende':'Start eventyret'}</button>{hero&&<button className="secondary" type="button" onClick={()=>game.leaveTraining()}>Avbryt</button>}</div>
+ <StorageNotice status={status}/><div className="builder-actions"><button className="primary" type="submit">{hero?'Lagre utseende':'Start eventyret'}</button>{(hero||canCancel)&&<button className="secondary" type="button" onClick={()=>hero?game.leaveTraining():game.cancelCreation()}>Avbryt</button>}</div>
  </form></div></main>;
 }

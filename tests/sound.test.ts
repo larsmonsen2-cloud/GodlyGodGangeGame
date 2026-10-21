@@ -53,12 +53,12 @@ describe('Optional sound', () => {
     const audio = new SoundEngine(factory, null); audio.setEnabled(true);
     await expect(audio.unlock()).resolves.toBeUndefined();
     audio.play('hit'); expect(context.createOscillator).not.toHaveBeenCalled();
-    const game = new GameStore(() => 0); game.createHero('Sol', 'forest'); game.startTraining();
+    const game = selectLast(new GameStore(() => 0)); game.createHero('Sol', 'forest'); game.startTraining();
     game.digit('1'); game.submit(); expect(game.getSnapshot().hero?.xp).toBe(10); game.dispose();
   });
   it('celebrates each level and victory once after the answer finishes, and cleans up', () => {
     vi.useFakeTimers();
-    const game = new GameStore(() => 0);
+    const game = selectLast(new GameStore(() => 0));
     const audio = { play: vi.fn(), stop: vi.fn() };
     const unbind = bindSound(game, audio);
     game.createHero('Sol', 'sky'); game.startTraining();
@@ -72,3 +72,6 @@ describe('Optional sound', () => {
     game.dispose();
   });
 });
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

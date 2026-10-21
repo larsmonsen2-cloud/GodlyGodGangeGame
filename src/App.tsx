@@ -1,3 +1,4 @@
+import { HeroSelect } from './HeroSelect';
 import { CharacterBuilder } from './CharacterBuilder';
 import { enemyById } from './enemies';
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react';
@@ -75,9 +76,11 @@ export function App() {
     '--reveal-time': `${CONFIG.timing.reveal}ms`,
   } as CSSProperties;
 
-  if (state.screen === 'create' || state.screen === 'appearance') return <CharacterBuilder key={state.screen} hero={state.screen === 'appearance' ? state.hero : null} draft={state.appearanceDraft} status={state.storageStatus} reduced={reduced} />;
+  if (state.screen === 'recovery') return <main className="hero-select-page"><Header/><h1>Heltene dine er beholdt</h1><p className="storage-notice">Vi kunne ikke åpne eller oppgradere lagringen trygt. Ingen gammel lagring er overskrevet. Frigjør om nødvendig plass i nettleseren og prøv igjen.</p><button className="primary" onClick={()=>game.retryStorage()}>Prøv igjen</button></main>;
+  if (state.screen === 'heroes') return <HeroSelect profiles={state.profiles} lastHeroId={state.activeHeroId} status={state.storageStatus} notice={state.equipmentNotice}/>;
+  if (state.screen === 'create' || state.screen === 'appearance') return <CharacterBuilder canCancel={state.profiles.length>0} key={state.screen} hero={state.screen === 'appearance' ? state.hero : null} draft={state.appearanceDraft} status={state.storageStatus} reduced={reduced} />;
 
-  if (state.screen === 'shop' && state.hero) return <Shop hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
+  if (state.screen === 'shop' && state.hero) return <Shop ready={state.shopReady} revealed={state.revealedOffer} key={state.activeHeroId} context={{heroId:state.activeHeroId,session:state.shopSession}} hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
 
   if (state.screen === 'arena-select' && state.hero) return <ArenaSelect hero={state.hero} />;
   if (state.screen === 'arena-intro' && state.hero && state.selectedEnemy) return <ArenaIntro hero={state.hero} enemyId={state.selectedEnemy} reduced={reduced} />;
@@ -137,8 +140,8 @@ export function App() {
     <Header />
     <main className="home-main"><div className="hero-layout">
       <section className="portrait-panel"><SceneView appearance={state.hero!.appearance} color={state.hero!.color} weapon={state.hero!.weapon} reduced={reduced} /></section>
-      <section className="details-panel"><HeroProgress hero={state.hero!} status={state.storageStatus} reputationNotice={state.reputationNotice} /></section>
+      <section className="details-panel"><HeroProgress key={state.activeHeroId} hero={state.hero!} status={state.storageStatus} reputationNotice={state.reputationNotice} /></section>
     </div></main>
-    {state.equipmentNotice && <Modal title="Helten er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
+    {(state.equipmentNotice || state.profiles.find(p=>p.id===state.activeHeroId)?.notice) && <Modal title="Helten er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice ?? state.profiles.find(p=>p.id===state.activeHeroId)?.notice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
   </div>;
 }

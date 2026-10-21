@@ -8,7 +8,7 @@ describe('Phase 1 rules', () => {
   let game: GameStore;
   beforeEach(() => {
     vi.useFakeTimers();
-    game = new GameStore(() => .999999); // 10 × 10, intentionally repeated.
+    game = selectLast(new GameStore(() => .999999)); // 10 × 10, intentionally repeated.
     game.createHero('  Sol  ', 'forest');
     game.startTraining();
   });
@@ -89,7 +89,7 @@ describe('Phase 1 rules', () => {
     expect(game.getSnapshot().input).toBe('12');
   });
   it('normalizes leading zeroes as integers', () => {
-    const other = new GameStore(() => 0);
+    const other = selectLast(new GameStore(() => 0));
     other.createHero('A', 'sky'); other.startTraining();
     ['0', '0', '1'].forEach(d => other.digit(d));
     other.submit();
@@ -121,12 +121,12 @@ describe('Phase 1 rules', () => {
     expect(game.getSnapshot()).toBe(state);
   });
   it('validates trimmed names and keeps the hero only in memory', () => {
-    const other = new GameStore();
+    const other = selectLast(new GameStore());
     expect(other.createHero(' ', 'forest')).toBe(false);
     expect(other.createHero('a'.repeat(21), 'forest')).toBe(false);
     expect(other.createHero('  ' + 'a'.repeat(20) + ' ', 'berry')).toBe(true);
     expect(other.getSnapshot().hero?.name).toHaveLength(20);
-    expect(new GameStore().getSnapshot().hero).toBeNull();
+    expect(selectLast(new GameStore()).getSnapshot().hero).toBeNull();
     other.dispose();
   });
   it('requires releasing Enter before a second-error reveal can be dismissed', () => {
@@ -157,3 +157,6 @@ describe('Phase 1 rules', () => {
     expect(game.getSnapshot().input).toBe('7');
   });
 });
+
+// Existing gameplay tests explicitly choose the last profile after the new startup selector.
+function selectLast(g:GameStore){if(g.getSnapshot().screen==='heroes')g.selectHero(g.getSnapshot().activeHeroId!);return g;}

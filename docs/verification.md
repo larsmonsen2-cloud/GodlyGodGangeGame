@@ -123,3 +123,24 @@ Nettleserkontroll på isolerte testopprinnelser på port 4181:
 Den eksisterende forhåndsvisningshelten på localhost:4173 ble lastet om uten nullstilling: nivå 3, XP 10/90, 25 gull, stats 5/5/40, to ledige poeng, aktiv kvist og stormstav som sparemål ble bevart. Riktig tittel ble beregnet uten historiske ryktemeldinger.
 
 Begrensninger: Ingen fysisk telefontest eller visuell gjennomgang av alle kosmetiske kombinasjoner. Isolerte høynivå-fixtures ble brukt til bosskontroll. Eksisterende begrensning ved simulering av bakgrunnsfane gjelder fortsatt. Ingen balanseendring. Fase 7 er ikke publisert.
+
+## Fase 8 – 21. oktober 2026
+
+101 automatiserte tester består (83 eksisterende og 18 nye). Tidligere spilltester velger eksplisitt sist brukte profil etter oppstart; gamle målforventninger er tilpasset det nye kravet om neste tilbud. Nye tester dekker like navn/ulike ID-er, ingen arv, separate XP/stats/gull/utstyr/mål/seire, avbrutt opprettelse, bytte og omlasting, gamle callbacks, forbudt bytte under kamp, foreldede butikkhendelser, dobbelttrykk, sikkerhetskopi, idempotens, backup-/migreringsskrivefeil og retry, delvis ugyldig samling, ugyldige/dupliserte ID-er, ventende v5-rykter og vanlig skrivefeil. Tilbudstester dekker uavhengige serier, høyeste eierskap, hoppede-over kjøp, eldre utstyr, avsluttet serie, ugyldige tilbud, manglende gull og faktisk skade.
+
+Produksjonsbygg består. Bare eksisterende advarsel om Phaser-pakkens størrelse. Ingen konsollfeil eller advarsler under den kontrollerte nettleserflyten. Spillet bruker lokal lagring direkte, uten backend eller nye miljøvariabler.
+
+Isolert nettlesertest på 127.0.0.1:4182; ingen eksisterende brukerprofil ble nullstilt:
+- Migrerte en v4-fixture «Kari»: nivå 25, 500 gull, kjempekløyver, fire seire, langt sølvhår og ansiktsmaling. Senere magimål ble fjernet med én forståelig melding. Ingen gammel ryktedialog.
+- Valgte infernoklingen som Karis nye mål. Opprettet Knut med annet utseende og magisk startvåpen, null gull/XP og ingen seire.
+- Knut svarte riktig fem ganger i trening og nådde nivå 2. Vant to komplette Gøran-kamper med ti svar hver og opptjente 50 gull. Bare første seier åpnet Birger og ga ryktemelding.
+- Valgte lærlingstaven som Knuts mål, kjøpte for nøyaktig 50 gull og så 8 → 12 skade. Målet ble fjernet uten automatisk erstatning. Neste tilbud ble stormstaven; nærkamp forble jernsverd.
+- Mitt utstyr inneholdt bare Knuts kvist og lærlingstav. Utstyrte gammel kvist gratis; tilbudet forble stormstaven. Valgte den som nytt mål.
+- Byttet til Kari: fortsatt 500 gull, kjempekløyver, fire seire og infernoklingen som mål. Flere bytter og omlasting bevarte begge profiler og riktig sist-brukt-markering.
+- Avbrutt opprettelse ga ingen ekstra profil. En tredje profil med 20 W-er testet linjebryting og flere kort.
+- Testet Karis kjøp over til magi: faktisk skade falt 38 → 12 og ble vist korrekt. Kjøp av infernoklingen fullførte nærkampserien uten falskt neste tilbud og fjernet hennes mål.
+
+Visuell kontroll: heltevelger på 390×844 og 360×640, butikk og lange våpennavn på liten mobil, samt to kolonner på PC 1280×900. Lange navn og titler brytes; kort viser ulike faktiske figurer og våpen. Målt ingen horisontal overskridelse på kontrollerte sider. En kontrastfeil i neste-tilbud-meldingen ble rettet og kontrollert i nytt bygg. Kort utenfor synsfeltet avmonteres for å begrense figurkostnad.
+
+Begrensninger: Ingen fysisk telefontest eller stresstest med svært mange profiler. Vanlig lokal nettleserlagring er fortsatt eneste lagring; ingen synkronisering mellom faner/enheter er lagt til. Backup-/kvotefeil og forsinkede gamle hendelser er automatisert testet. Eksisterende bakgrunnsfane-begrensning gjelder fortsatt. Ingen produksjonspublisering av fase 8.
+
