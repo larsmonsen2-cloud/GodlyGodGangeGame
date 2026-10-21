@@ -42,7 +42,7 @@ describe('Phase 1 rules', () => {
     enter('100');
     for (let i = 0; i < 20; i++) { game.submit(); game.digit('1'); game.next(); game.backspace(); }
     expect(attack).toHaveBeenCalledTimes(1);
-    expect(attack).toHaveBeenCalledWith({ questionId: game.getSnapshot().question!.id, damage: 8, kind: 'melee' });
+    expect(attack).toHaveBeenCalledWith({ questionId: game.getSnapshot().question!.id, damage: 8, kind: 'melee', special:false, heroId:game.getSnapshot().activeHeroId,sessionId:game.getSnapshot().sessionId });
     expect(game.getSnapshot().input).toBe('100');
     expect(game.getSnapshot().feedback).toBe('correct');
     vi.advanceTimersByTime(CONFIG.timing.correct - 1);

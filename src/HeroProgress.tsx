@@ -1,3 +1,4 @@
+import { LevelEmblem } from './LevelEmblem';
 import { heroChronicle } from './reputation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { answersToLevel, damageFor, WEAPONS, xpNeeded, type Attribute, type Hero } from './progression';
@@ -24,13 +25,13 @@ export function StorageNotice({ status }: { status: StorageStatus }) {
     : 'Lagringen kunne ikke åpnes trygt. Originalen er beholdt. Prøv igjen.'}</p>;
 }
 
-export function Progress({ hero, training = false, status = 'saved' }: { hero: Hero; training?: boolean; status?: StorageStatus }) {
+export function Progress({ hero, training = false, status = 'saved', emblem = false, celebrate = false }: { hero: Hero; training?: boolean; status?: StorageStatus; emblem?:boolean; celebrate?:boolean }) {
   const remaining = answersToLevel(hero);
-  return <div className={`progress-summary ${training ? 'training-progress' : ''}`}>
-    <div><b>Nivå {hero.level}</b><span>{hero.xp}/{xpNeeded(hero.level)} XP</span></div>
+  return <div className={emblem?'emblem-progress':undefined}>{emblem&&<LevelEmblem level={hero.level} celebrate={celebrate}/>}<div className={`progress-summary ${training ? 'training-progress' : ''}`}>
+    <div>{!emblem&&<b>Nivå {hero.level}</b>}<span>{hero.xp}/{xpNeeded(hero.level)} XP</span></div>
     <progress value={hero.xp} max={xpNeeded(hero.level)} aria-label="XP til neste nivå" />
     {training && status !== 'saved' ? <StorageNotice status={status} /> : <p>{remaining} {remaining === 1 ? 'riktig svar' : 'riktige svar'} til nivå {hero.level + 1}</p>}
-  </div>;
+  </div></div>;
 }
 
 const attributes: { key: Attribute; label: string }[] = [
@@ -39,7 +40,7 @@ const attributes: { key: Attribute; label: string }[] = [
   { key: 'maxHealth', label: 'Helse' },
 ];
 
-export function HeroProgress({ hero, status, reputationNotice }: { hero: Hero; status: StorageStatus; reputationNotice: string | null }) {
+export function HeroProgress({ hero, status, reputationNotice, levelCelebration }: { hero: Hero; status: StorageStatus; reputationNotice: string | null; levelCelebration:number|null }) {
   const [choosing, setChoosing] = useState(false);
   const weapon = WEAPONS[hero.weapon];
   const chronicle = heroChronicle(hero);
@@ -48,7 +49,7 @@ export function HeroProgress({ hero, status, reputationNotice }: { hero: Hero; s
     <p className="hero-title">{chronicle.title}</p>
     <p className="hero-chronicle">{chronicle.story}</p>
     {reputationNotice && !choosing && <div className="reputation-notice" role="status"><strong>Ryktet ditt har vokst!</strong><button type="button" onClick={()=>game.dismissReputation()}>Fortsett</button></div>}
-    <Progress hero={hero} />
+    <Progress hero={hero} emblem celebrate={levelCelebration===hero.level} />
     <dl className="hero-stats"><div><dt>Styrke</dt><dd>{hero.strength}</dd></div><div><dt>Magi</dt><dd>{hero.magic}</dd></div><div><dt>Maks liv</dt><dd>{hero.maxHealth}</dd></div></dl>
     <button className="points-button" type="button" disabled={!hero.points} onClick={() => setChoosing(true)}>{hero.points ? `Fordel ${hero.points} poeng` : '0 ubrukte poeng'}<span aria-hidden="true">{hero.points ? '+' : '✦'}</span></button>
     <div className="equipped-weapon"><h3>{weapon.name}</h3><p>{weapon.description}</p></div>

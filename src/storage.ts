@@ -8,7 +8,7 @@ import { WEAPONS, xpNeeded, type Hero } from './progression';
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid' | 'blocked';
 function validCore(value: unknown): value is Hero {
@@ -58,7 +58,7 @@ function restoreEquipment(h: Hero, version: number): Hero {
   return { ...h, weapon, ownedWeapons, savingGoal };
 }
 
-export type HeroProfile = { id: string; hero: Hero; notice?: string };
+export type HeroProfile = { id: string; hero: Hero; notice?: string; seenLevel?: number };
 export type HeroLibrary = { profiles: HeroProfile[]; lastHeroId: string | null; rejectedProfiles: unknown[] };
 export const BACKUP_KEY = 'gangriket.save.before-profiles';
 export const newProfileId = () => crypto.randomUUID();
@@ -77,7 +77,7 @@ function restoreProfile(hero: Hero, id: string, notice?: string): HeroProfile {
 export function saveLibrary(storage: SaveStorage | null, library: HeroLibrary): StorageStatus {
   try {
     if (!storage) return 'session';
-    storage.setItem(SAVE_KEY, JSON.stringify({version:SAVE_VERSION,...library}));
+    storage.setItem(SAVE_KEY, JSON.stringify({version:SAVE_VERSION,...library,profiles:library.profiles.map(p=>({...p,seenLevel:p.seenLevel??p.hero.level}))}));
     return 'saved';
   } catch { return 'session'; }
 }
@@ -95,10 +95,10 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
       const hero=restoreHero(save.hero,save.version);
       if (!hero) return {...empty,status:'blocked'};
       const id=newProfileId();
-      const profile=restoreProfile(hero,id);
+      const profile={...restoreProfile(hero,id),seenLevel:hero.level};
       repaired=save.version>=4 ? !validHero(save.hero) : save.version===3 ? !validPreviousHero(save.hero) : save.version===2 ? !validEquipment(save.hero) : !isStarterId(save.hero.weapon);
       library={profiles:[profile],lastHeroId:id,rejectedProfiles:[]};
-    } else if (save?.version===SAVE_VERSION && Array.isArray(save.profiles)) {
+    } else if ([5,SAVE_VERSION].includes(save?.version) && Array.isArray(save.profiles)) {
       const profiles:HeroProfile[]=[], rejectedProfiles:unknown[]=Array.isArray(save.rejectedProfiles)?save.rejectedProfiles:[];
       const ids=new Set<string>();
       for (const value of save.profiles) {
@@ -107,7 +107,8 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
         let id=value.id;
         if(typeof id!=='string'||!id||ids.has(id)){id=newProfileId();repaired=true;}
         ids.add(id);
-        profiles.push(restoreProfile(hero,id,typeof value.notice==='string'?value.notice:undefined));
+        const seenLevel=save.version<6 || !Number.isSafeInteger(value.seenLevel) || value.seenLevel<1 || value.seenLevel>hero.level ? hero.level : value.seenLevel;
+        profiles.push({...restoreProfile(hero,id,typeof value.notice==='string'?value.notice:undefined),seenLevel});
         if (!validHero(value.hero)) repaired=true;
       }
       if (!profiles.length && rejectedProfiles.length) return {...empty,status:'blocked'};
@@ -131,7 +132,7 @@ export function loadHero(storage: SaveStorage | null): {hero:Hero|null;status:St
 export function saveHero(storage: SaveStorage | null, hero: Hero): StorageStatus {
  const saved=loadLibrary(storage);if(saved.status==='blocked')return 'blocked';
  const id=saved.lastHeroId??newProfileId();
- const profiles=saved.profiles.length?saved.profiles.map(p=>p.id===id?{...p,hero}:p):[{id,hero}];
+ const profiles=saved.profiles.length?saved.profiles.map(p=>p.id===id?{...p,hero}:p):[{id,hero,seenLevel:hero.level}];
  return saveLibrary(storage,{profiles,lastHeroId:id,rejectedProfiles:saved.rejectedProfiles});
 }
 export function browserStorage(): SaveStorage | null {

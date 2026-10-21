@@ -144,3 +144,13 @@ Visuell kontroll: heltevelger på 390×844 og 360×640, butikk og lange våpenna
 
 Begrensninger: Ingen fysisk telefontest eller stresstest med svært mange profiler. Vanlig lokal nettleserlagring er fortsatt eneste lagring; ingen synkronisering mellom faner/enheter er lagt til. Backup-/kvotefeil og forsinkede gamle hendelser er automatisert testet. Eksisterende bakgrunnsfane-begrensning gjelder fortsatt. Ingen produksjonspublisering av fase 8.
 
+
+## Fase 9 – 21. oktober 2026
+
+124 tester i ti filer består, inkludert 23 nye spesial-/emblemtester. Dekker fire vanlige treff/femte dobbelt uten ekstratreff, flere våpen, XP, første/andre feil, fasit, redigering, pause, nivåbanner, ny økt, bytte, omlasting, gamle hendelser, dødelig femtetreff, én belønning, materialgrenser, lange nivåverdier, engangsfeiring og v5-migrering. Produksjonsbygg består; eksisterende advarsel om Phaser-pakkens størrelse gjenstår.
+
+Isolert nettleser på 127.0.0.1:4183, uten å nullstille brukerens profiler: fem riktige med kvist og magistav; samtidig nivåøkning og spesial; automatisk neste oppgave og retur til nivå 2-emblem; fire riktige så feil viste Rekken brutt, riktig andre forsøk viste 1/5. Arenatest med jernsverd endte med femte treff, 32 skade, 0/80 fiendeliv og én belønning på 25 gull. Infernoklinge ga SUPER og 54 skade i trening. Lyd var av. Ingen konsollfeil/advarsler i kontrollert flyt.
+
+Visuell kontroll på 360×640, 390×844 og PC 1280×900. Talltastene målte 44 px på minste mobil; ingen horisontal overskridelse på kontrollerte flater. Figuren blir liten på kort mobil fordi regnefelt og taster prioriteres. Nivå 999999 ble kontrollert; skjoldet ble utvidet etter første visuelle test og kontrollert igjen i nytt bygg. Lange titler og sekundære heltevalg kan gi vertikal scrolling; hovedhandlingene ligger fast nederst. Eksisterende lokal forhåndsvisning på port 4173 ble oppdatert uten å nullstille Kvisthero.
+
+Begrensninger: Ingen fysisk telefon- eller lydavspillingstest. Redusert bevegelse er implementert og kodegjennomgått, men ikke visuelt testet med endret systempreferanse. Pause, bakgrunnshendelser og engangsfeiring over omlasting er automatisert testet; ikke alle kombinasjoner ble manuelt gjentatt. Fase 9 er ikke pushet eller publisert.

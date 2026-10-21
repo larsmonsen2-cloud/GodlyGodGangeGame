@@ -15,6 +15,11 @@ export type GameState = {
   hero: Hero | null;
   profiles: HeroProfile[];
   activeHeroId: string | null;
+  sessionId: number;
+  streak: number;
+  specialFlash: boolean;
+  brokenFrom: number;
+  levelCelebration: number | null;
   shopSession: number;
   shopReady: boolean;
   revealedOffer: WeaponId | null;
@@ -32,10 +37,10 @@ export type GameState = {
   reputationNotice: string | null;
 };
 export type ShopContext = {heroId:string|null;session:number};
-export type Attack = { questionId: number; damage: number; kind: 'melee' | 'magic' };
+export type Attack = { heroId:string; sessionId:number; special:boolean; questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, appearanceDraft: null, reputationNotice: null };
+  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, sessionId:0,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, appearanceDraft: null, reputationNotice: null };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -76,6 +81,7 @@ export class GameStore {
   enemyRemaining = () => this.enemyClock.getRemaining();
   private update(patch: Partial<GameState>) {
     const next={...this.state,...patch};
+    if(patch.screen&&!['training','arena'].includes(patch.screen)){next.streak=0;next.specialFlash=false;next.brokenFrom=0;}
     if(patch.hero && next.activeHeroId) {
       const hero={...patch.hero,reputation:normalizeReputation(patch.hero)};
       next.profiles=next.profiles.map(p=>p.id===next.activeHeroId?{...p,hero}:p);
@@ -105,13 +111,13 @@ export class GameStore {
     const trimmed = name.trim();
     if (this.state.screen !== 'create' || !trimmed || Array.from(trimmed).length > CONFIG.maxNameLength ||
         !CONFIG.colors.some(c => c.id === color) || !isStarterId(weapon) || !validAppearance(appearance) || appearance.clothes !== color) return false;
-    const profile={id:newProfileId(),hero:newHero(trimmed,color,weapon,appearance)};
+    const profile={id:newProfileId(),seenLevel:1,hero:newHero(trimmed,color,weapon,appearance)};
     this.update({profiles:[...this.state.profiles,profile],activeHeroId:profile.id,screen:'hero'});
     return true;
   }
   private clearSession() {
     this.cancel();clearTimeout(this.levelTimer);clearTimeout(this.shopTimer);this.enemyClock.reset();
-    this.update({shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,appearanceDraft:null,reputationNotice:null});
+    this.update({sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,appearanceDraft:null,reputationNotice:null});
   }
   openHeroes() {
     if(this.state.screen!=='hero')return;
@@ -119,7 +125,7 @@ export class GameStore {
   }
   selectHero(id: string) {
     if(this.state.screen!=='heroes'||!this.state.profiles.some(p=>p.id===id))return false;
-    this.clearSession();this.update({activeHeroId:id,screen:'hero'});this.presentReputation();return true;
+    this.clearSession();this.update({activeHeroId:id,screen:'hero'});this.presentReputation();this.presentLevel();return true;
   }
   beginCreation() {if(this.state.screen!=='heroes')return;this.clearSession();this.update({screen:'create'});}
   cancelCreation() {if(this.state.screen!=='create'||!this.state.profiles.length)return;this.clearSession();this.update({screen:'heroes'});}
@@ -131,15 +137,15 @@ export class GameStore {
     if (!this.state.hero || !['hero','shop','arena'].includes(this.state.screen) || (this.state.screen==='arena'&&!this.state.combat?.resultReady)) return;
     this.cancel();
     this.enemyClock.reset();
-    this.update({ combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.update({sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   leaveTraining() {
     if (!this.state.hero || ['heroes','create','recovery'].includes(this.state.screen)) return;
     this.cancel();
     clearTimeout(this.levelTimer);
     this.enemyClock.reset();
-    this.update({ combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
-    this.presentReputation();
+    this.update({streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
+    this.presentReputation();this.presentLevel();
   }
   digit(value: string) {
     if (!this.canAnswer() || !/^\d$/.test(value) || this.state.input.length >= CONFIG.maxDigits) return;
@@ -155,23 +161,27 @@ export class GameStore {
     if (isCorrect(question, input)) {
       // Lock synchronously before emitting. Rendering never grants an attack.
       const before = this.state.hero!;
+      const special=this.state.streak+1>=CONFIG.special.threshold;
+      const streak=special?0:this.state.streak+1;
+      const damage=damageFor(before)*(special?CONFIG.special.multiplier:1);
+      const event:Attack={heroId:this.state.activeHeroId!,sessionId:this.state.sessionId,questionId:question.id,damage,kind:WEAPONS[before.weapon].kind,special};
       if (this.state.screen === 'arena') {
         const combat = this.state.combat!;
-        const enemyHp = Math.max(0, combat.enemyHp - damageFor(before));
+        const enemyHp = Math.max(0, combat.enemyHp - damage);
         const won = enemyHp === 0;
         const victory = won ? awardVictory(before, combat.enemyId) : null;
-        this.update({ feedback: 'correct', combat: { ...combat, enemyHp, outcome: won ? 'won' : 'active', reward: victory?.reward ?? null },
+        this.update({streak:won?0:streak,specialFlash:special,brokenFrom:0, feedback: 'correct', combat: { ...combat, enemyHp, outcome: won ? 'won' : 'active', reward: victory?.reward ?? null },
           ...(victory ? { hero: victory.hero } : {}) });
         this.later(CONFIG.timing.correct, () => {
           if (won) { this.update({ combat: { ...this.state.combat!, resultReady: true } }); this.presentReputation(); }
           else this.newQuestion();
         });
-        this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
+        this.attackListeners.forEach(listener => listener(event));
         return;
       }
       const hero = grantXp(before, CONFIG.progression.xpPerAnswer);
-      this.update({ feedback: 'correct', hero });
-      this.attackListeners.forEach(listener => listener({ questionId: question.id, damage: damageFor(before), kind: WEAPONS[before.weapon].kind }));
+      this.update({streak,specialFlash:special,brokenFrom:0, feedback: 'correct', hero });
+      this.attackListeners.forEach(listener => listener(event));
       this.later(CONFIG.timing.correct, () => {
         this.newQuestion();
         if (hero.level > before.level) {
@@ -183,9 +193,9 @@ export class GameStore {
       });
     } else {
       const nextMistakes = mistakes + 1;
-      this.update({ feedback: nextMistakes === 1 ? 'first-error' : 'second-error', mistakes: nextMistakes });
+      this.update({brokenFrom:this.state.streak,streak:0,specialFlash:false, feedback: nextMistakes === 1 ? 'first-error' : 'second-error', mistakes: nextMistakes });
       this.later(CONFIG.timing.wrong, () => this.update({
-        input: '', feedback: nextMistakes === 1 ? 'answering' : 'reveal',
+        brokenFrom:0,input: '', feedback: nextMistakes === 1 ? 'answering' : 'reveal',
       }));
     }
   }
@@ -215,7 +225,7 @@ export class GameStore {
     this.cancel(); clearTimeout(this.levelTimer); this.enemyClock.reset();
     const enemy=enemyById(selectedEnemy), id=++this.serial, heroId=this.state.activeHeroId;
     this.enemyClock=new EnemyClock(enemy.interval,()=>{if(this.state.activeHeroId===heroId&&this.state.combat?.id===id)this.enemyHit();});
-    this.update({ screen:'arena',reputationNotice:null,levelUp:null,
+    this.update({sessionId:id,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, screen:'arena',reputationNotice:null,levelUp:null,
       combat:{id,enemyId:selectedEnemy,reward:null,hp:hero.maxHealth,enemyHp:enemy.health,outcome:'active',resultReady:false,paused:false},
       question:makeQuestion(++this.serial,this.random),input:'',mistakes:0,feedback:'answering'});
   }
@@ -233,7 +243,7 @@ export class GameStore {
     const damage = enemyById(combat.enemyId).damage;
     const hp = Math.max(0, combat.hp - damage);
     if (hp === 0) this.cancel();
-    this.update({ combat: { ...combat, hp, outcome: hp === 0 ? 'lost' : 'active', resultReady: hp === 0 } });
+    this.update({...(hp===0?{streak:0,specialFlash:false,brokenFrom:0}:{}), combat: { ...combat, hp, outcome: hp === 0 ? 'lost' : 'active', resultReady: hp === 0 } });
     this.enemyListeners.forEach(listener => listener(damage));
   }
   openShop() {
@@ -283,6 +293,12 @@ export class GameStore {
     this.update({hero:{...hero,appearance:{...appearanceDraft},color:appearanceDraft.clothes},screen:'hero',appearanceDraft:null});
     return true;
   }
+  private presentLevel() {
+    const {hero,screen,activeHeroId,profiles}=this.state;
+    const profile=profiles.find(p=>p.id===activeHeroId);
+    if(!hero||screen!=='hero'||!profile||hero.level<=(profile.seenLevel??hero.level))return;
+    this.update({levelCelebration:hero.level,profiles:profiles.map(p=>p.id===activeHeroId?{...p,seenLevel:hero.level}:p)});
+  }
   private presentReputation() {
     const {hero,screen,combat}=this.state;
     if (!hero || !(screen==='hero' || (screen==='arena' && combat?.resultReady)) || !pendingReputation(hero)) return;
@@ -300,7 +316,7 @@ export class GameStore {
   }
   private newQuestion() {
     this.cancel();
-    this.update({ question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.update({specialFlash:false,brokenFrom:0, question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   dispose() {
     this.cancel();

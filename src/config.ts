@@ -1,4 +1,6 @@
 export const CONFIG = {
+  special: { threshold: 5, multiplier: 2, windup: 140, projectile: 300, impact: 300, damageFloat: 600 },
+  emblem: { thresholds: [1, 5, 10, 20, 40], celebration: 900 },
   reputation: { levelThresholds: [1, 3, 6, 10, 15] },
   minFactor: 1,
   maxFactor: 10,

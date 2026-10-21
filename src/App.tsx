@@ -1,3 +1,6 @@
+import { LevelEmblem } from './LevelEmblem';
+import { SpecialMeter } from './SpecialMeter';
+import { WEAPONS } from './weapons';
 import { HeroSelect } from './HeroSelect';
 import { CharacterBuilder } from './CharacterBuilder';
 import { enemyById } from './enemies';
@@ -104,9 +107,10 @@ export function App() {
       </header>
       <section className="battle-region" aria-label="Spillområde">
         {!arena && <div className="combat-labels"><span className="hero-label">{state.hero.name}</span><span className="practice-tag"><i /> Ingen tidspress</span></div>}
-        <SceneView appearance={state.hero.appearance} color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
-        {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><span aria-hidden="true">✦</span><div><strong>Nivå {state.levelUp}!</strong><small>Nytt egenskapspoeng</small></div></div>}
+        <SceneView key={`${state.activeHeroId}-${state.sessionId}`} appearance={state.hero.appearance} color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
+        {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><LevelEmblem level={state.levelUp} compact/><div><strong>Nivå opp!</strong><small>Nytt egenskapspoeng</small></div></div>}
         {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
+        <SpecialMeter streak={state.streak} flash={state.specialFlash} brokenFrom={state.brokenFrom} magic={WEAPONS[state.hero.weapon].kind==='magic'} questionId={question.id}/>
         <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>
       </section>
       <section className={`math-region feedback-${feedback}`} aria-label="Regneområde">
@@ -140,7 +144,7 @@ export function App() {
     <Header />
     <main className="home-main"><div className="hero-layout">
       <section className="portrait-panel"><SceneView appearance={state.hero!.appearance} color={state.hero!.color} weapon={state.hero!.weapon} reduced={reduced} /></section>
-      <section className="details-panel"><HeroProgress key={state.activeHeroId} hero={state.hero!} status={state.storageStatus} reputationNotice={state.reputationNotice} /></section>
+      <section className="details-panel"><HeroProgress levelCelebration={state.levelCelebration} key={state.activeHeroId} hero={state.hero!} status={state.storageStatus} reputationNotice={state.reputationNotice} /></section>
     </div></main>
     {(state.equipmentNotice || state.profiles.find(p=>p.id===state.activeHeroId)?.notice) && <Modal title="Helten er gjenopprettet" onClose={() => game.dismissEquipmentNotice()}><p className="modal-description">{state.equipmentNotice ?? state.profiles.find(p=>p.id===state.activeHeroId)?.notice}</p><button className="primary" onClick={() => game.dismissEquipmentNotice()}>Fortsett</button></Modal>}
   </div>;

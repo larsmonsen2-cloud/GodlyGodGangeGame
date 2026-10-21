@@ -1,4 +1,4 @@
-# Gangriket – fase 4
+# Gangriket – fase 9
 
 Et mobilvennlig fantasyspill for den lille gangetabellen. Lag en helt, velg klær, besøk heltesiden og tren mot en svært tålmodig dummy.
 
@@ -127,3 +127,7 @@ Publiseringsstatus: fase 5 og 6 ble senere publisert etter egne bestillinger. Fa
 Butikken viser neste nærkampvåpen og neste magivåpen ut fra høyeste eide progresjonstrinn. Eide våpen finnes i «Mitt utstyr». Gamle kjøp beholdes; sparemål som ikke lenger er aktuelle tilbud fjernes med engangsmelding når de peker for langt frem.
 
 [Regler og lagring](docs/profiles-shop.md) · [Full bestilling](docs/profiles-shop-spec.md). 101 tester og produksjonsbygg består. Lokal server: npm run build og npm run preview. Fase 7 er publisert etter separat beskjed; fase 8 er ikke pushet eller publisert.
+
+## Nytt i fase 9
+
+Fem riktige på rad utløser ett dobbelt spesialangrep. Nivåskjoldet utvikles fra jern til magisk. Ingen avbrudd i treningen ved nivåøkning. 124 tester består. Se [beskrivelse og konfigurasjon](docs/special-level.md), [krav](docs/special-level-spec.md) og [verifikasjon](docs/verification.md). Fase 9 er foreløpig lokal.

@@ -70,7 +70,7 @@ describe('Arena combat', () => {
   });
   it('wins once, waits for the final equation, grants gold but no XP, and resets for a rematch', () => {
     game.startArena(); const firstId = game.getSnapshot().combat!.id;
-    for (let i = 0; i < 9; i++) { answer(); vi.advanceTimersByTime(1200); }
+    for (let i = 0; i < 8; i++) { answer(); vi.advanceTimersByTime(1200); }
     answer(); game.submit(); game.next(); game.startArena();
     expect(game.getSnapshot()).toMatchObject({ combat: { outcome: 'won', enemyHp: 0, resultReady: false }, hero: { gold: 25, xp: 0, level: 1 } });
     vi.advanceTimersByTime(1199); expect(game.getSnapshot().combat?.resultReady).toBe(false);

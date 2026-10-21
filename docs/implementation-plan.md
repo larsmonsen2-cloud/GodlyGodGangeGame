@@ -106,3 +106,15 @@ Fase 5 og 6 er senere publisert etter separate bestillinger. Fase 7 er ikke push
 - [x] 101 tester, produksjonsbygg og isolert nettleserflyt på mobil/PC.
 
 Fase 7 er publisert etter egen beskjed. Ingen push eller deploy av fase 8.
+
+## Fase 9 – ferdig lokalt
+
+- [x] Konfigurerbar rekke, én dobbel skadehendelse og sikre øktgrenser.
+- [x] Fem segmenter, feilbrudd, nærkamp- og magieffekt.
+- [x] Nivåemblem med fem materialer og engangsfeiring per profil.
+- [x] v6-migrering uten historiske nivåfeiringer.
+- [x] 124 tester, produksjonsbygg og isolert mobil-/PC-kontroll.
+- [x] Oppdatert balanse og spesifikasjon; se special-level.md.
+- [ ] Separat eventuell publisering etter beskjed.
+
+Statuskorreksjon: Fase 8 er publisert på f927d0e; fase 9 er ikke publisert.
