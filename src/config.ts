@@ -54,6 +54,10 @@ export const CONFIG = {
     defeat: 450,
   },
   colors: [
+    {id:'slate',name:'Kullsvart',value:'#54616b',dark:'#293741'},
+    {id:'cream',name:'Kremhvit',value:'#eee0bd',dark:'#b6a686'},
+    {id:'navy',name:'Midnattsblå',value:'#506388',dark:'#293a59'},
+    {id:'teal',name:'Havgrønn',value:'#55b7bb',dark:'#2f767d'},
     { id: 'forest', name: 'Skoggrønn', value: '#69b89a', dark: '#397d68' },
     { id: 'berry', name: 'Bærrosa', value: '#d6849a', dark: '#9b506b' },
     { id: 'sky', name: 'Himmelblå', value: '#7caedc', dark: '#507cad' },

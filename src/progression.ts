@@ -1,3 +1,4 @@
+import {emptyBackground,type Background} from './background';
 import { freshTraining, type Training } from './training';
 import { normalizeAppearance, type Appearance } from './appearance';
 import { normalizeReputation, type Reputation } from './reputation';
@@ -7,6 +8,7 @@ import { WEAPONS, type WeaponId, type StarterId } from './weapons';
 export { WEAPONS, type WeaponId } from './weapons';
 export type Attribute = 'strength' | 'magic' | 'maxHealth';
 export type Hero = {
+  background: Background;
   training: Training;
   appearance: Appearance;
   reputation: Reputation;
@@ -21,7 +23,7 @@ export type Hero = {
 export const xpNeeded = (level: number) => CONFIG.progression.baseXp + CONFIG.progression.xpStep * (level - 1);
 export const damageFor = (hero: Hero, weapon: WeaponId = hero.weapon) => hero[WEAPONS[weapon].stat] + WEAPONS[weapon].damage;
 export const answersToLevel = (hero: Hero) => Math.ceil((xpNeeded(hero.level) - hero.xp) / CONFIG.progression.xpPerAnswer);
-export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick', appearance: Appearance = normalizeAppearance(null,color)): Hero => ({ training:freshTraining(), name, color, appearance, reputation: { highestTier: 1, seenTier: 1, seenBoss: 'none' }, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null, defeatedEnemies: [], claimedBossBonuses: [] });
+export const newHero = (name: string, color: HeroColor, weapon: StarterId = 'stick', appearance: Appearance = normalizeAppearance(null,color),background:Background=emptyBackground()): Hero => ({ background, training:freshTraining(), name, color, appearance, reputation: { highestTier: 1, seenTier: 1, seenBoss: 'none' }, ...CONFIG.progression.initial, weapon, ownedWeapons: [weapon], savingGoal: null, defeatedEnemies: [], claimedBossBonuses: [] });
 export function grantXp(hero: Hero, amount: number): Hero {
   if (!Number.isSafeInteger(amount) || amount < 0) return hero;
   let { level, xp, points } = hero;

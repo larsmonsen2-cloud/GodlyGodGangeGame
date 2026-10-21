@@ -11,13 +11,13 @@ const settled=(hero:Hero):Hero=>({...hero,reputation:normalizeReputation(hero,tr
 afterEach(()=>vi.useRealTimers());
 describe('Appearance and character editing',()=>{
  it('supports every option and safely replaces unknown cosmetic ids',()=>{
-  expect(Object.values(APPEARANCE_OPTIONS).map(o=>o.length)).toEqual([6,5,6,4,4,6]);
+  expect(Object.values(APPEARANCE_OPTIONS).map(o=>o.length)).toEqual([6,15,10,6,5,10,4,12,10,7,3]);
   for(const [key,options] of Object.entries(APPEARANCE_OPTIONS))for(const option of options)expect(validAppearance({...DEFAULT_APPEARANCE,[key]:option.id})).toBe(true);
   expect(validAppearance({...DEFAULT_APPEARANCE,hairStyle:'unknown'})).toBe(false);
   expect(normalizeAppearance({skin:'unknown',hairColor:'silver'},'berry')).toMatchObject({skin:'sand',hairColor:'silver',clothes:'berry'});
  });
  it('creates only selected starter with appearance and rejects invalid creation',()=>{
-  const storage=memory(),game=selectLast(new GameStore(()=>0,storage));const appearance={...DEFAULT_APPEARANCE,clothes:'violet' as const,detail:'beard' as const};
+  const storage=memory(),game=selectLast(new GameStore(()=>0,storage));const appearance={...DEFAULT_APPEARANCE,clothes:'violet' as const,beard:'long_beard' as const};
   expect(game.createHero('Sol','violet','wand',{...appearance,skin:'unknown'} as never)).toBe(false);
   expect(game.createHero('Sol','violet','wand',appearance)).toBe(true);
   expect(loadHero(storage).hero).toMatchObject({name:'Sol',weapon:'wand',ownedWeapons:['wand'],appearance,strength:5,magic:5,maxHealth:40});game.dispose();

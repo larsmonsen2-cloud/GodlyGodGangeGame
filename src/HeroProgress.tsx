@@ -1,3 +1,4 @@
+import {ORIGINS,GOALS} from './background';
 import {TRAINING} from './training';
 import { LevelEmblem } from './LevelEmblem';
 import { heroChronicle } from './reputation';
@@ -50,6 +51,7 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <div className="hero-heading"><h2 className="hero-name-heading">{hero.name}</h2><span key={hero.gold} className="gold-count changed-value">{hero.gold} gull</span></div>
     <p className="hero-title">{chronicle.title}</p>
     <p className="hero-chronicle">{chronicle.story}</p>
+    <details className="personal-history"><summary>Min historie</summary><p><b>Opprinnelse:</b> {ORIGINS.find(o=>o.id===hero.background.origin)?.name??'Ikke valgt ennå.'}</p><p><b>Stort mål:</b> {GOALS.find(g=>g.id===hero.background.goal)?.name??'Ikke valgt ennå.'}</p><button type="button" onClick={()=>game.openAppearance()}>Endre historie og utseende</button></details>
     {reputationNotice && !choosing && <div className="reputation-notice" role="status"><strong>Ryktet ditt har vokst!</strong><button type="button" onClick={()=>game.dismissReputation()}>Fortsett</button></div>}
     <Progress hero={hero} emblem celebrate={levelCelebration===hero.level} />
     <dl className="hero-stats"><div><dt>Styrke</dt><dd>{hero.strength}</dd></div><div><dt>Magi</dt><dd>{hero.magic}</dd></div><div><dt>Maks liv</dt><dd>{hero.maxHealth}</dd></div></dl>
@@ -60,7 +62,7 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <SavingGoal hero={hero} actionable compact />
     <StorageNotice status={status} />
     <div className="hero-actions"><button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button><button className="primary arena-button" type="button" onClick={() => game.openArena()}><span>Arena</span><span aria-hidden="true">⚔</span></button><button className="primary shop-button" type="button" onClick={() => game.openShop()}><span>Butikk</span><span aria-hidden="true">◇</span></button></div>
-    <button className="edit-appearance" type="button" onClick={()=>game.openAppearance()}>Endre utseende</button>
+    <button className="edit-appearance" type="button" onClick={()=>game.openAppearance()}>Endre utseende og historie</button>
     <button className="edit-appearance" type="button" onClick={()=>game.openHeroes()}>Bytt helt</button>
     {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
       <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>

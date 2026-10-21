@@ -136,3 +136,8 @@ Statuskorreksjon: Fase 8 er publisert på f927d0e; fase 9 er ikke publisert.
 - [x] Felles figurtegning, dynamisk kampinnramming og tydelig knusebonus.
 - [x] 142 tester, produksjonsbygg, isolert mobil-/desktopkontroll; se visual-upgrade.md.
 
+
+## Karakterbygger og personlig historie
+- [x] Tre trinn, garderobe, stilforslag, personlig bakgrunn og trygg v8-migrering.
+- [x] 153 tester og isolert mobil-/desktopkontroll; se wardrobe.md.
+

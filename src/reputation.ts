@@ -1,3 +1,4 @@
+import {personalStory} from './background';
 import { CONFIG } from './config';
 import type { Hero } from './progression';
 export type Profile='strength'|'magic'|'health'|'balanced';
@@ -64,5 +65,5 @@ export function heroChronicle(hero:Hero) {
  const base=CHRONICLES[profile][tier-1];
  const fact=feat==='klask'?'Kong Klask er beseiret, og krønikeskriverne ber om overtidsbetaling.':feat==='buldre'?'Baron Buldre er beseiret; helten har bestilt et lengre navneskilt.':feat==='goran'?'Gøran er beseiret, og helten kaller det allerede slaget.':'';
  const suffix=feat==='klask'?'Klaskvelteren':feat==='buldre'?'Baronvelteren':feat==='goran'?'Slimets skrekk':'';
- return {tier,profile,feat,title:suffix?`${base.title}, ${suffix}`:base.title,story:fact?`${fact} ${base.story}`:base.story};
+ return {tier,profile,feat,title:suffix?`${base.title}, ${suffix}`:base.title,story:personalStory(hero,base.story,fact)};
 }

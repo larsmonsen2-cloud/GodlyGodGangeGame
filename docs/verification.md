@@ -173,3 +173,7 @@ Publisert og kontrollert: commit 05afbd8504d98cadb51f6afabefd19fcd8c4dfa9 på ek
 
 Visuell oppgradering: kontroller og begrensninger er dokumentert i visual-upgrade.md.
 
+
+## Garderobe og bakgrunn
+153 tester består. Migrering, utkast, personlige historier og mobilvisning kontrollert; se wardrobe.md for omfang og begrensninger.
+

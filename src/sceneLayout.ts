@@ -8,13 +8,13 @@ export function shapePoints(shapes:WeaponShape[]):number[][] {
 }
 // Include the whole weapon sweep, not only its resting pose. Camera framing is
 // independent of gameplay, and stays fixed throughout each answer animation.
-export function battleFrame(weapon:WeaponId,enemy:WeaponShape[]|null,dummyHeight=240,boss=false){
+export function battleFrame(weapon:WeaponId,enemy:WeaponShape[]|null,dummyHeight=240,boss=false,heroHeight=212){
  const heroScale=1.2;
  const enemyPoints=enemy?shapePoints(enemy):[];
  const enemyHeight=enemy?Math.max(...enemyPoints.map(p=>p[1]))-Math.min(...enemyPoints.map(p=>p[1])):1;
  const enemyWidth=enemy?Math.max(...enemyPoints.map(p=>p[0]))-Math.min(...enemyPoints.map(p=>p[0])):1;
  const targetScale=enemy?Math.min((boss?300:235)/enemyHeight,(boss?275:240)/enemyWidth):1.18;
- const points:number[][]=[[90,350],[210,350],[155,100]];
+ const points:number[][]=[[65,350],[245,350],[155,350-heroScale*heroHeight]];
  for(let angle=-40;angle<=100;angle+=5){
   const r=angle*Math.PI/180;
   for(const [x,y] of shapePoints(weaponShapes(weapon))){

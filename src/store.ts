@@ -1,3 +1,4 @@
+import {emptyBackground,validBackground,type Background} from './background';
 import {trainHit} from './training';
 import { normalizeAppearance, validAppearance, type Appearance } from './appearance';
 import { normalizeReputation, pendingReputation, acknowledgeReputation, heroChronicle } from './reputation';
@@ -35,6 +36,7 @@ export type GameState = {
   storageStatus: StorageStatus;
   equipmentNotice: string | null;
   purchase: Purchase | null;
+  backgroundDraft: Background | null;
   appearanceDraft: Appearance | null;
   reputationNotice: string | null;
 };
@@ -42,7 +44,7 @@ export type ShopContext = {heroId:string|null;session:number};
 export type Attack = { heroId:string; sessionId:number; special:boolean; questionId: number; damage: number; kind: 'melee' | 'magic' };
 
 export class GameStore {
-  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, sessionId:0,streak:0,trainingReward:null,specialFlash:false,brokenFrom:0,levelCelebration:null,shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, appearanceDraft: null, reputationNotice: null };
+  private state: GameState = { screen: 'create', hero: null, profiles: [], activeHeroId: null, sessionId:0,streak:0,trainingReward:null,specialFlash:false,brokenFrom:0,levelCelebration:null,shopSession: 0, shopReady:true, revealedOffer:null, combat: null, selectedEnemy: null, question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null, storageStatus: 'session', equipmentNotice: null, purchase: null, backgroundDraft:null,appearanceDraft: null, reputationNotice: null };
   private listeners = new Set<() => void>();
   private attackListeners = new Set<(event: Attack) => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -109,17 +111,17 @@ export class GameStore {
       if (this.state.activeHeroId === heroId && this.generation === generation && (this.state.screen === 'training' || this.state.screen === 'arena') && this.state.question?.id === questionId) callback();
     }, ms);
   }
-  createHero(name: string, color: HeroColor, weapon: WeaponId = 'stick', appearance: Appearance = normalizeAppearance(null,color)) {
+  createHero(name: string, color: HeroColor, weapon: WeaponId = 'stick', appearance: Appearance = normalizeAppearance(null,color),background:Background=emptyBackground()) {
     const trimmed = name.trim();
     if (this.state.screen !== 'create' || !trimmed || Array.from(trimmed).length > CONFIG.maxNameLength ||
-        !CONFIG.colors.some(c => c.id === color) || !isStarterId(weapon) || !validAppearance(appearance) || appearance.clothes !== color) return false;
-    const profile={id:newProfileId(),seenLevel:1,hero:newHero(trimmed,color,weapon,appearance)};
+        !CONFIG.colors.some(c => c.id === color) || !isStarterId(weapon) || !validAppearance(appearance) || !validBackground(background) || appearance.clothes !== color) return false;
+    const profile={id:newProfileId(),seenLevel:1,hero:newHero(trimmed,color,weapon,appearance,background)};
     this.update({profiles:[...this.state.profiles,profile],activeHeroId:profile.id,screen:'hero'});
     return true;
   }
   private clearSession() {
     this.cancel();clearTimeout(this.levelTimer);clearTimeout(this.shopTimer);this.enemyClock.reset();
-    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,appearanceDraft:null,reputationNotice:null});
+    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null,shopReady:true,revealedOffer:null,shopSession:this.state.shopSession+1,combat:null,selectedEnemy:null,question:null,input:'',mistakes:0,feedback:'answering',levelUp:null,purchase:null,backgroundDraft:null,appearanceDraft:null,reputationNotice:null});
   }
   openHeroes() {
     if(this.state.screen!=='hero')return;
@@ -139,14 +141,14 @@ export class GameStore {
     if (!this.state.hero || !['hero','shop','arena'].includes(this.state.screen) || (this.state.screen==='arena'&&!this.state.combat?.resultReady)) return;
     this.cancel();
     this.enemyClock.reset();
-    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
+    this.update({trainingReward:null,sessionId:++this.serial,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, backgroundDraft:null,appearanceDraft: null, levelUp: null, screen: 'training', question: makeQuestion(++this.serial, this.random), input: '', mistakes: 0, feedback: 'answering' });
   }
   leaveTraining() {
     if (!this.state.hero || ['heroes','create','recovery'].includes(this.state.screen)) return;
     this.cancel();
     clearTimeout(this.levelTimer);
     this.enemyClock.reset();
-    this.update({trainingReward:null,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
+    this.update({trainingReward:null,streak:0,specialFlash:false,brokenFrom:0,levelCelebration:null, combat: null, purchase: null, reputationNotice: null, backgroundDraft:null,appearanceDraft: null, screen: 'hero', question: null, input: '', mistakes: 0, feedback: 'answering', levelUp: null });
     this.presentReputation();this.presentLevel();
   }
   digit(value: string) {
@@ -284,16 +286,20 @@ export class GameStore {
   }
   openAppearance() {
     if (this.state.screen !== 'hero' || !this.state.hero) return;
-    this.update({screen:'appearance',reputationNotice:null,appearanceDraft:{...this.state.hero.appearance}});
+    this.update({screen:'appearance',reputationNotice:null,appearanceDraft:{...this.state.hero.appearance},backgroundDraft:{...this.state.hero.background}});
   }
   editAppearance(appearance: Appearance) {
     if (this.state.screen !== 'appearance' || !validAppearance(appearance)) return false;
     this.update({appearanceDraft:{...appearance}}); return true;
   }
+  editBackground(background:Background){
+    if(this.state.screen!=='appearance'||!validBackground(background))return false;
+    this.update({backgroundDraft:{...background}});return true;
+  }
   saveAppearance() {
-    const {hero,appearanceDraft,screen}=this.state;
-    if (!hero || screen!=='appearance' || !validAppearance(appearanceDraft)) return false;
-    this.update({hero:{...hero,appearance:{...appearanceDraft},color:appearanceDraft.clothes},screen:'hero',appearanceDraft:null});
+    const {hero,appearanceDraft,backgroundDraft,screen}=this.state;
+    if (!hero || screen!=='appearance' || !validAppearance(appearanceDraft)||!validBackground(backgroundDraft)) return false;
+    this.update({hero:{...hero,background:{...backgroundDraft},appearance:{...appearanceDraft},color:appearanceDraft.clothes},screen:'hero',backgroundDraft:null,appearanceDraft:null});
     return true;
   }
   private presentLevel() {

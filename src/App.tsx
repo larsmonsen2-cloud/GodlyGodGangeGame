@@ -83,7 +83,7 @@ export function App() {
 
   if (state.screen === 'recovery') return <main className="hero-select-page"><Header/><h1>Heltene dine er beholdt</h1><p className="storage-notice">Vi kunne ikke åpne eller oppgradere lagringen trygt. Ingen gammel lagring er overskrevet. Frigjør om nødvendig plass i nettleseren og prøv igjen.</p><button className="primary" onClick={()=>game.retryStorage()}>Prøv igjen</button></main>;
   if (state.screen === 'heroes') return <HeroSelect profiles={state.profiles} lastHeroId={state.activeHeroId} status={state.storageStatus} notice={state.equipmentNotice}/>;
-  if (state.screen === 'create' || state.screen === 'appearance') return <CharacterBuilder canCancel={state.profiles.length>0} key={state.screen} hero={state.screen === 'appearance' ? state.hero : null} draft={state.appearanceDraft} status={state.storageStatus} reduced={reduced} />;
+  if (state.screen === 'create' || state.screen === 'appearance') return <CharacterBuilder canCancel={state.profiles.length>0} key={state.screen} hero={state.screen === 'appearance' ? state.hero : null} draft={state.appearanceDraft} backgroundDraft={state.backgroundDraft} status={state.storageStatus} reduced={reduced} />;
 
   if (state.screen === 'shop' && state.hero) return <Shop ready={state.shopReady} revealed={state.revealedOffer} key={state.activeHeroId} context={{heroId:state.activeHeroId,session:state.shopSession}} hero={state.hero} purchase={state.purchase} status={state.storageStatus} reduced={reduced} />;
 

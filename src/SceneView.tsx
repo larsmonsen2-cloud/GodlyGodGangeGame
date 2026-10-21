@@ -1,3 +1,4 @@
+import {cosmeticHeight} from './cosmeticParts';
 import {battleFrame} from './sceneLayout';
 import {ARENAS,arenaIndex} from './arenas';
 import { DEFAULT_APPEARANCE, type Appearance } from './appearance';
@@ -24,8 +25,8 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
     class ForestScene extends Phaser.Scene {
       create() {
         if (disposed) return;
-        const width = training ? 720 : 600;
-        const height = training ? 420 : 560;
+        const width = training ? 720 : 440;
+        const height = training ? 420 : 480;
         makeBackground(this, width, height, training);
         if (arena && enemyById(enemyId).boss) {
           const banners=this.add.graphics();
@@ -49,11 +50,11 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
          }
          if(index)env.fillStyle(ink,.15).fillEllipse(360,365,650,65);
         }
-        let frame=battleFrame(weapon,arena?enemyShapes(enemyId):null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,arena&&enemyById(enemyId).boss);
+        let frame=battleFrame(weapon,arena?enemyShapes(enemyId):null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,arena&&enemyById(enemyId).boss,cosmeticHeight(appearance));
         const fitCamera=()=>{if(!training)return;const camera=this.cameras.main;camera.setZoom(Math.min(this.scale.width/frame.width,this.scale.height/frame.height));camera.centerOn(frame.left+frame.width/2,frame.top+frame.height/2);};
         fitCamera();this.scale.on('resize',fitCamera);this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.scale.off('resize',fitCamera));
-        const homeX = training ? 155 : 290;
-        const homeY = training ? 350 : 450;
+        const homeX = training ? 155 : 200;
+        const homeY = training ? 350 : 440;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
         const hero = makeHero(this, homeX, homeY, color, weapon, appearance);
         hero.root.setScale(training ? frame.heroScale : 1.62);
@@ -89,7 +90,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
            sound.play('break');
            if(reduced)dummy.setAlpha(.25);else{this.tweens.add({targets:dummy,angle:65,scaleY:.15,alpha:.25,duration:280});for(let i=0;i<6;i++){const chip=this.add.rectangle(535,250,12,19,0xdac18b);this.tweens.add({targets:chip,x:470+i*22,y:350,angle:i*51,alpha:0,duration:400,onComplete:()=>chip.destroy()});}}
           }
-          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();frame=battleFrame(weapon,null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240);fitCamera();dummy=makeDummy(this,535,homeY,game.getSnapshot().hero?.training);dummy.setScale(dummy.scaleX*frame.targetScale);});
+          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();frame=battleFrame(weapon,null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,false,cosmeticHeight(appearance));fitCamera();dummy=makeDummy(this,535,homeY,game.getSnapshot().hero?.training);dummy.setScale(dummy.scaleX*frame.targetScale);});
           const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
           if (defeated) {
             this.tweens.killTweensOf(dummy);
@@ -178,8 +179,8 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
     const instance = new Phaser.Game({
       type: thumbnail ? Phaser.CANVAS : Phaser.AUTO,
       parent: host.current,
-      width: training ? host.current.clientWidth : 600,
-      height: training ? host.current.clientHeight : 560,
+      width: training ? host.current.clientWidth : 440,
+      height: training ? host.current.clientHeight : 480,
       backgroundColor: '#264d48',
       transparent: false,
       antialias: true,

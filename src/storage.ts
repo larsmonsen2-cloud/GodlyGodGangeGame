@@ -1,3 +1,4 @@
+import {normalizeBackground,validBackground} from './background';
 import {freshTraining,validTraining} from './training';
 import { isNextOffer } from './shop';
 import { normalizeAppearance, validAppearance } from './appearance';
@@ -9,7 +10,7 @@ import { WEAPONS, xpNeeded, type Hero } from './progression';
 import { isWeaponId, isStarterId } from './weapons';
 
 export const SAVE_KEY = 'gangriket.save';
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>;
 export type StorageStatus = 'saved' | 'session' | 'invalid' | 'blocked';
 function validCore(value: unknown): value is Hero {
@@ -46,7 +47,16 @@ function validPreviousHero(value: unknown): value is Hero {
 }
 export function validHero(value: unknown): value is Hero {
   if (!validPreviousHero(value)) return false;
-  return validAppearance(value.appearance) && value.color===value.appearance.clothes && JSON.stringify(value.reputation)===JSON.stringify(normalizeReputation(value));
+  return validBackground(value.background) && validAppearance(value.appearance) && value.color===value.appearance.clothes && JSON.stringify(value.reputation)===JSON.stringify(normalizeReputation(value));
+}
+function validBeforeWardrobe(value:unknown):boolean {
+ if(!validPreviousHero(value))return false;
+ const old=value.appearance as unknown as Record<string,unknown>,clean=normalizeAppearance(old,value.color);
+ if(!old)return false;
+ return ['skin','hairStyle','hairColor','expression','clothes'].every(key=>old[key]===clean[key as keyof typeof clean])
+  && (old.detail==='beard'||old.detail==='moustache'||old.detail===clean.detail)
+  && value.color===clean.clothes
+  && JSON.stringify(value.reputation)===JSON.stringify(normalizeReputation(value));
 }
 function restoreEquipment(h: Hero, version: number): Hero {
   if (version === 1) {
@@ -70,7 +80,7 @@ function restoreHero(value: unknown, version: number): Hero | null {
   if (!validCore(value)) return null;
   const restored = restoreArena(restoreEquipment(value, version), version);
   const appearance = normalizeAppearance(version < 4 ? null : restored.appearance, restored.color);
-  return {...restored, training:version<7?freshTraining():validTraining(restored.training)?restored.training:freshTraining(), appearance, color: appearance.clothes, reputation: normalizeReputation(restored, version < 5)};
+  return {...restored, background:version<8?normalizeBackground(null):normalizeBackground(restored.background), training:version<7?freshTraining():validTraining(restored.training)?restored.training:freshTraining(), appearance, color: appearance.clothes, reputation: normalizeReputation(restored, version < 5)};
 }
 function restoreProfile(hero: Hero, id: string, notice?: string): HeroProfile {
   if (hero.savingGoal && !isNextOffer(hero, hero.savingGoal)) return {id, hero:{...hero,savingGoal:null}, notice:goalMessage};
@@ -100,7 +110,7 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
       const profile={...restoreProfile(hero,id),seenLevel:hero.level};
       repaired=save.version>=4 ? !validHero(save.hero) : save.version===3 ? !validPreviousHero(save.hero) : save.version===2 ? !validEquipment(save.hero) : !isStarterId(save.hero.weapon);
       library={profiles:[profile],lastHeroId:id,rejectedProfiles:[]};
-    } else if ([5,6,SAVE_VERSION].includes(save?.version) && Array.isArray(save.profiles)) {
+    } else if ([5,6,7,SAVE_VERSION].includes(save?.version) && Array.isArray(save.profiles)) {
       const profiles:HeroProfile[]=[], rejectedProfiles:unknown[]=Array.isArray(save.rejectedProfiles)?save.rejectedProfiles:[];
       const ids=new Set<string>();
       for (const value of save.profiles) {
@@ -111,15 +121,16 @@ export function loadLibrary(storage: SaveStorage | null): HeroLibrary & { status
         ids.add(id);
         const seenLevel=save.version<6 || !Number.isSafeInteger(value.seenLevel) || value.seenLevel<1 || value.seenLevel>hero.level ? hero.level : value.seenLevel;
         profiles.push({...restoreProfile(hero,id,typeof value.notice==='string'?value.notice:undefined),seenLevel});
-        if (!validHero(value.hero)||(save.version>=7&&!validTraining(value.hero.training))) repaired=true;
+        if (!(save.version<8?validBeforeWardrobe(value.hero):validHero(value.hero))||(save.version>=7&&!validTraining(value.hero.training))) repaired=true;
       }
       if (!profiles.length && rejectedProfiles.length) return {...empty,status:'blocked'};
       library={profiles,lastHeroId:profiles.some(p=>p.id===save.lastHeroId)?save.lastHeroId:profiles[0]?.id??null,rejectedProfiles};
     } else return {...empty,status:'blocked'};
     const changed=JSON.stringify({version:SAVE_VERSION,...library})!==raw;
     if(changed) {
+      if(save.version<8&&storage.getItem('gangriket.save.before-v8')===null)storage.setItem('gangriket.save.before-v8',raw);
       // Backup must succeed BEFORE replacing any old data. No overwriting on failed migration.
-      if(save.version<SAVE_VERSION&&storage.getItem('gangriket.save.before-v7')===null)storage.setItem('gangriket.save.before-v7',raw);
+      if(save.version<7&&storage.getItem('gangriket.save.before-v7')===null)storage.setItem('gangriket.save.before-v7',raw);
       if(storage.getItem(BACKUP_KEY)===null)storage.setItem(BACKUP_KEY,raw);
       if(saveLibrary(storage,library)!=='saved')return {...empty,status:'blocked'};
     }

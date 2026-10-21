@@ -1,3 +1,5 @@
+import {hairParts,outfitParts,headwearParts} from './cosmeticParts';
+import type {WeaponShape} from './weaponVisuals';
 import {dummyFor,type Training} from './training';
 import { DEFAULT_APPEARANCE, SKINS, HAIR_COLORS, type Appearance } from './appearance';
 import Phaser from 'phaser';
@@ -9,9 +11,18 @@ import type { WeaponId } from './progression';
 export const ANCHORS = { head: { x: 0, y: -139 }, hand: { x: 38, y: -84 }, shield: { x: -34, y: -83 }, helmet: { x: 0, y: -173 } };
 const color = (hex: string) => Phaser.Display.Color.HexStringToColor(hex).color;
 
+function paintShapes(g:Phaser.GameObjects.Graphics,shapes:WeaponShape[]){
+ for(const s of shapes){g.fillStyle(color(s.fill),s.opacity??1);if(s.type==='polygon')g.fillPoints(s.points.map(([x,y])=>({x,y})),true);else if(s.type==='ellipse')g.fillEllipse(s.x,s.y,s.width,s.height);else g.fillRect(s.x,s.y,s.width,s.height);}
+}
 export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: HeroColor, equipped: WeaponId = 'stick', appearance: Appearance = DEFAULT_APPEARANCE) {
   const palette = CONFIG.colors.find(c => c.id === chosen)!;
   const root = scene.add.container(x, y);
+  const rear=scene.add.graphics();root.add(rear);
+  if(appearance.cape!=='none'){
+   rear.fillStyle(color(CONFIG.colors.find(c=>c.id===appearance.accent)!.dark)).fillTriangle(-29,-120,-66,appearance.cape==='long'?-4:-44,55,appearance.cape==='long'?-10:-42);
+   rear.lineStyle(3,0xe2c98e,.45).lineBetween(-30,-110,-55,appearance.cape==='long'?-10:-48);
+  }
+  const hairLayers=hairParts(appearance);paintShapes(rear,hairLayers.back);
   const body = scene.add.graphics();
   root.add(body);
   const outline=0x20372f;
@@ -20,25 +31,15 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   // Ink silhouette and planted, oversized boots: shared by every hero view.
   body.fillStyle(outline).fillRoundedRect(-39,-123,78,78,17).fillRoundedRect(-35,-26,35,29,8).fillRoundedRect(3,-26,38,29,8);
   // Cape, trousers and oversized leather boots.
-  body.fillStyle(0x284f49).fillTriangle(-28, -112, -47, -36, 30, -34);
+
   body.fillStyle(0x333e3c).fillRoundedRect(-24, -53, 19, 44, 7).fillRoundedRect(6, -53, 19, 44, 7);
   body.fillStyle(0x654635).fillRoundedRect(-30, -22, 28, 22, 7).fillRoundedRect(5, -22, 31, 22, 7);
   body.fillStyle(0x9c7150).fillRoundedRect(-28, -23, 24, 7, 3).fillRoundedRect(7, -23, 24, 7, 3);
   body.lineStyle(3,0x322f27).lineBetween(-29,-5,-3,-5).lineBetween(7,-5,34,-5);
   body.lineStyle(2,0xd5ae75).lineBetween(-24,-17,-12,-14).lineBetween(13,-17,25,-14);
-  // Tunic, collar, sleeve and belt.
-  body.fillStyle(color(palette.dark)).fillRoundedRect(-35, -119, 70, 72, 15);
-  body.fillStyle(color(palette.value)).fillRoundedRect(-29, -121, 57, 63, 12);
-  body.fillStyle(0xffffff,.14).fillTriangle(-25,-112,-6,-116,-24,-72);
-  body.lineStyle(3,color(palette.dark)).lineBetween(17,-96,23,-67).lineBetween(-19,-69,-12,-86);
-  body.fillStyle(0xece2bb).fillTriangle(-14, -121, 0, -104, 14, -121);
-  body.fillStyle(0x6b4935).fillRoundedRect(-33, -62, 66, 11, 3);
-  body.fillStyle(0xe6bb68).fillRoundedRect(-6, -64, 14, 15, 3);
-  body.fillStyle(0x8a6542).fillRect(-2, -60, 6, 7);
-  body.fillStyle(color(palette.dark)).fillRoundedRect(-45, -113, 20, 33, 7);
-  body.fillStyle(skin).fillRoundedRect(-44, -88, 17, 24, 7);
-  // Long hair behind the head; front hair and facial detail remain separate layers.
-  if (appearance.hairStyle==='long') body.fillStyle(hair).fillRoundedRect(-39,-187,78,92,20);
+  paintShapes(body,outfitParts(appearance));
+  body.fillStyle(color(palette.dark)).fillRoundedRect(-45,-113,20,33,7);
+  body.fillStyle(skin).fillRoundedRect(-44,-88,17,24,7);
   body.fillStyle(outline).fillRoundedRect(-34,-182,69,74,25);
   body.fillStyle(skin).fillCircle(-30,-143,10).fillCircle(30,-143,10);
   body.fillStyle(skin).fillRoundedRect(-31,-179,63,68,24);
@@ -46,12 +47,20 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   body.fillStyle(0xffedcf,.22).fillEllipse(-17,-158,19,14);
   const face=scene.add.graphics(); root.add(face);
   const faceInk = appearance.skin==='umber'||appearance.skin==='chestnut' ? 0xf2dcc0 : 0x273c38;
-  if(appearance.expression==='stern'||appearance.expression==='worried') face.fillStyle(0xfff2db).fillEllipse(-14,-143,12,16).fillEllipse(15,-143,12,16);
+  if(['stern','worried','happy','serious'].includes(appearance.expression)) face.fillStyle(0xfff2db).fillEllipse(-14,-143,12,16).fillEllipse(15,-143,12,16);
   else if(appearance.expression==='sly') face.fillStyle(0xfff2db).fillEllipse(-14,-143,10,15);
   face.lineStyle(4,faceInk);
   face.fillStyle(0x201f24,.18).fillEllipse(2,-133,11,7);
   face.lineStyle(2,faceInk,.8).beginPath().moveTo(1,-144).lineTo(5,-135).lineTo(0,-133).strokePath();
-  if(appearance.expression==='stern') {
+  face.lineStyle(3,faceInk);
+  if(appearance.expression==='happy'){
+    face.fillStyle(0x273c38).fillCircle(-13,-142,4).fillCircle(16,-142,4);
+    face.beginPath().moveTo(-22,-155).lineTo(-9,-157).moveTo(10,-157).lineTo(23,-155).strokePath();
+    face.fillStyle(0x273c38).fillEllipse(1,-124,24,14);face.fillStyle(0xfff2db).fillRect(-8,-130,18,5);
+  }else if(appearance.expression==='serious'){
+    face.fillStyle(0x273c38).fillEllipse(-14,-143,5,9).fillEllipse(15,-143,5,9);
+    face.beginPath().moveTo(-23,-156).lineTo(-7,-156).moveTo(8,-156).lineTo(24,-156).moveTo(-7,-123).lineTo(9,-123).strokePath();
+  }else if(appearance.expression==='stern') {
     face.fillStyle(0x273c38).fillRoundedRect(-17,-147,6,10,2).fillRoundedRect(12,-147,6,10,2);
     face.beginPath().moveTo(-22,-155).lineTo(-8,-150).moveTo(10,-150).lineTo(23,-155).strokePath();
     face.beginPath().moveTo(-8,-125).lineTo(10,-125).strokePath();
@@ -71,23 +80,15 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
     face.beginPath().moveTo(-8,-127).lineTo(2,-124).lineTo(14,-131).strokePath();
     face.fillStyle(0xfff3d5).fillTriangle(-3,-126,12,-130,6,-123);
   }
-  const hairLayer=scene.add.graphics(); root.add(hairLayer); hairLayer.fillStyle(hair);
-  if(appearance.hairStyle==='tousled') {
-    hairLayer.fillRoundedRect(-34,-186,68,31,13).fillTriangle(-35,-160,-26,-186,-17,-150).fillTriangle(-14,-175,9,-190,8,-153).fillTriangle(7,-178,29,-182,31,-156).fillTriangle(-13,-183,0,-202,12,-181);
-  } else if(appearance.hairStyle==='short') {
-    hairLayer.fillRoundedRect(-32,-182,65,22,11).fillRect(-32,-168,7,22).fillRect(26,-168,7,22);
-  } else if(appearance.hairStyle==='curls') {
-    for(const [cx,cy,r] of [[-29,-172,13],[-20,-187,15],[0,-191,16],[21,-187,15],[32,-172,13]]) hairLayer.fillCircle(cx,cy,r);
-  } else if(appearance.hairStyle==='long') {
-    hairLayer.fillRoundedRect(-33,-186,67,26,13).fillTriangle(-33,-174,-13,-172,-30,-137).fillTriangle(5,-177,34,-173,31,-137);
-  }
-  if(appearance.hairStyle!=='bald'){
-    hairLayer.lineStyle(3,0xffedba,.35).beginPath().moveTo(-23,-178).lineTo(-13,-183).moveTo(-5,-184).lineTo(4,-188).moveTo(14,-177).lineTo(23,-181).strokePath();
-    hairLayer.lineStyle(3,outline,.45).lineBetween(-28,-163,-24,-173);
-  }
+  const hairLayer=scene.add.graphics();root.add(hairLayer);paintShapes(hairLayer,hairLayers.front);
+  const hat=scene.add.graphics();root.add(hat);paintShapes(hat,headwearParts(appearance));
   const detail=scene.add.graphics(); root.add(detail); detail.fillStyle(hair);
-  if(appearance.detail==='beard') detail.fillTriangle(-26,-130,28,-130,2,-93).fillRoundedRect(-28,-139,10,22,4).fillRoundedRect(20,-139,10,22,4);
-  if(appearance.detail==='moustache') detail.fillEllipse(-9,-128,23,10).fillEllipse(12,-128,23,10).fillTriangle(-20,-130,-27,-122,-8,-125).fillTriangle(23,-130,29,-122,11,-125);
+  if(appearance.beard==='long_beard') detail.fillTriangle(-26,-120,28,-120,2,-78).fillRoundedRect(-28,-139,10,22,4).fillRoundedRect(20,-139,10,22,4);
+  if(appearance.beard==='moustache') detail.fillEllipse(-9,-128,23,10).fillEllipse(12,-128,23,10).fillTriangle(-20,-130,-27,-122,-8,-125).fillTriangle(23,-130,29,-122,11,-125);
+  if(appearance.beard==='short_beard')detail.fillRoundedRect(-24,-121,49,14,7).fillRoundedRect(-28,-137,9,23,4).fillRoundedRect(21,-137,9,23,4);
+  if(appearance.detail==='freckles'){detail.fillStyle(faceInk,.75);for(const [x,y] of [[-24,-134],[-17,-131],[-22,-128],[19,-131],[26,-134],[23,-127]])detail.fillCircle(x,y,1.8);}
+  if(appearance.detail==='scar'){detail.lineStyle(3,faceInk,.8).lineBetween(21,-155,17,-131);detail.lineStyle(2,0xd5927b).lineBetween(16,-148,24,-145).lineBetween(15,-138,22,-136);}
+  if(appearance.detail==='glasses'){detail.lineStyle(3,0xe9d8aa).strokeCircle(-15,-143,12).strokeCircle(15,-143,12).lineBetween(-3,-143,3,-143).lineBetween(-27,-145,-34,-148).lineBetween(27,-145,34,-148);detail.lineStyle(1,0x293a38).strokeCircle(-15,-143,10).strokeCircle(15,-143,10);}
   if(appearance.detail==='paint') {detail.lineStyle(5,0x6f9fcc).beginPath().moveTo(-29,-137).lineTo(-16,-131).moveTo(19,-131).lineTo(31,-137).strokePath();detail.lineStyle(3,0xf2dfac).beginPath().moveTo(-28,-129).lineTo(-18,-124).moveTo(20,-124).lineTo(30,-129).strokePath();}
   const arm = scene.add.container(ANCHORS.hand.x, ANCHORS.hand.y);
   const weapon = scene.add.graphics();
@@ -99,6 +100,9 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   }
   const hand = scene.add.graphics();
   hand.fillStyle(color(palette.value)).fillRoundedRect(-13, -29, 19, 24, 7);
+  if(appearance.outfit==='mage'||appearance.outfit==='mage_dress')hand.fillStyle(color(palette.dark)).fillTriangle(-16,-31,10,-31,18,-5);
+  if(appearance.outfit==='warrior'||appearance.outfit==='armor_dress')hand.fillStyle(0xa7bab8).fillRoundedRect(-14,-30,23,15,5);
+  hand.fillStyle(color(CONFIG.colors.find(c=>c.id===appearance.accent)!.value)).fillRect(-13,-10,19,4);
   hand.fillStyle(outline).fillCircle(0,0,13);
   hand.fillStyle(skin).fillCircle(0, 0, 10);
   hand.lineStyle(2,outline,.5).lineBetween(-5,1,4,1).lineBetween(-4,5,3,5);
