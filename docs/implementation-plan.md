@@ -128,4 +128,11 @@ Statuskorreksjon: Fase 8 er publisert på f927d0e; fase 9 er ikke publisert.
 - [x] 100 motstandere, 20 bosser, ti kampmiljøer og 40 våpen.
 - [x] v7-migrering og særskilt backup uten tap av gamle seire/kjøp.
 - [x] 140 tester, balanseberegning, produksjonsbygg og isolert nettleserkontroll.
-- [ ] Bekreft produksjonsdeploy og funksjonstest på publisert bygg.
+- [x] Bekreft produksjonsdeploy og funksjonstest på publisert bygg (05afbd8).
+
+
+## Visuell oppgradering
+
+- [x] Felles figurtegning, dynamisk kampinnramming og tydelig knusebonus.
+- [x] 142 tester, produksjonsbygg, isolert mobil-/desktopkontroll; se visual-upgrade.md.
+

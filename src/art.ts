@@ -14,16 +14,23 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   const root = scene.add.container(x, y);
   const body = scene.add.graphics();
   root.add(body);
+  const outline=0x20372f;
   const skin = color(SKINS.find(item=>item.id===appearance.skin)!.value);
   const hair = color(HAIR_COLORS.find(item=>item.id===appearance.hairColor)!.value);
+  // Ink silhouette and planted, oversized boots: shared by every hero view.
+  body.fillStyle(outline).fillRoundedRect(-39,-123,78,78,17).fillRoundedRect(-35,-26,35,29,8).fillRoundedRect(3,-26,38,29,8);
   // Cape, trousers and oversized leather boots.
   body.fillStyle(0x284f49).fillTriangle(-28, -112, -47, -36, 30, -34);
   body.fillStyle(0x333e3c).fillRoundedRect(-24, -53, 19, 44, 7).fillRoundedRect(6, -53, 19, 44, 7);
   body.fillStyle(0x654635).fillRoundedRect(-30, -22, 28, 22, 7).fillRoundedRect(5, -22, 31, 22, 7);
   body.fillStyle(0x9c7150).fillRoundedRect(-28, -23, 24, 7, 3).fillRoundedRect(7, -23, 24, 7, 3);
+  body.lineStyle(3,0x322f27).lineBetween(-29,-5,-3,-5).lineBetween(7,-5,34,-5);
+  body.lineStyle(2,0xd5ae75).lineBetween(-24,-17,-12,-14).lineBetween(13,-17,25,-14);
   // Tunic, collar, sleeve and belt.
   body.fillStyle(color(palette.dark)).fillRoundedRect(-35, -119, 70, 72, 15);
   body.fillStyle(color(palette.value)).fillRoundedRect(-29, -121, 57, 63, 12);
+  body.fillStyle(0xffffff,.14).fillTriangle(-25,-112,-6,-116,-24,-72);
+  body.lineStyle(3,color(palette.dark)).lineBetween(17,-96,23,-67).lineBetween(-19,-69,-12,-86);
   body.fillStyle(0xece2bb).fillTriangle(-14, -121, 0, -104, 14, -121);
   body.fillStyle(0x6b4935).fillRoundedRect(-33, -62, 66, 11, 3);
   body.fillStyle(0xe6bb68).fillRoundedRect(-6, -64, 14, 15, 3);
@@ -32,17 +39,23 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   body.fillStyle(skin).fillRoundedRect(-44, -88, 17, 24, 7);
   // Long hair behind the head; front hair and facial detail remain separate layers.
   if (appearance.hairStyle==='long') body.fillStyle(hair).fillRoundedRect(-39,-187,78,92,20);
+  body.fillStyle(outline).fillRoundedRect(-34,-182,69,74,25);
   body.fillStyle(skin).fillCircle(-30,-143,10).fillCircle(30,-143,10);
   body.fillStyle(skin).fillRoundedRect(-31,-179,63,68,24);
+  body.fillStyle(0x352a27,.13).fillEllipse(24,-139,14,41);
+  body.fillStyle(0xffedcf,.22).fillEllipse(-17,-158,19,14);
   const face=scene.add.graphics(); root.add(face);
   const faceInk = appearance.skin==='umber'||appearance.skin==='chestnut' ? 0xf2dcc0 : 0x273c38;
   if(appearance.expression==='stern'||appearance.expression==='worried') face.fillStyle(0xfff2db).fillEllipse(-14,-143,12,16).fillEllipse(15,-143,12,16);
   else if(appearance.expression==='sly') face.fillStyle(0xfff2db).fillEllipse(-14,-143,10,15);
-  face.lineStyle(3,faceInk);
+  face.lineStyle(4,faceInk);
+  face.fillStyle(0x201f24,.18).fillEllipse(2,-133,11,7);
+  face.lineStyle(2,faceInk,.8).beginPath().moveTo(1,-144).lineTo(5,-135).lineTo(0,-133).strokePath();
   if(appearance.expression==='stern') {
     face.fillStyle(0x273c38).fillRoundedRect(-17,-147,6,10,2).fillRoundedRect(12,-147,6,10,2);
     face.beginPath().moveTo(-22,-155).lineTo(-8,-150).moveTo(10,-150).lineTo(23,-155).strokePath();
     face.beginPath().moveTo(-8,-125).lineTo(10,-125).strokePath();
+    face.fillStyle(0xfff0cd).fillRect(-5,-126,11,3);
   } else if(appearance.expression==='worried') {
     face.fillStyle(0x273c38).fillEllipse(-14,-142,9,13).fillEllipse(15,-142,9,13);
     face.beginPath().moveTo(-23,-154).lineTo(-9,-159).moveTo(10,-159).lineTo(24,-154).strokePath();
@@ -56,6 +69,7 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
     face.beginPath().moveTo(10,-141).lineTo(16,-145).lineTo(22,-141).strokePath();
     face.beginPath().moveTo(-21,-155).lineTo(-8,-157).moveTo(10,-158).lineTo(23,-153).strokePath();
     face.beginPath().moveTo(-8,-127).lineTo(2,-124).lineTo(14,-131).strokePath();
+    face.fillStyle(0xfff3d5).fillTriangle(-3,-126,12,-130,6,-123);
   }
   const hairLayer=scene.add.graphics(); root.add(hairLayer); hairLayer.fillStyle(hair);
   if(appearance.hairStyle==='tousled') {
@@ -66,6 +80,10 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
     for(const [cx,cy,r] of [[-29,-172,13],[-20,-187,15],[0,-191,16],[21,-187,15],[32,-172,13]]) hairLayer.fillCircle(cx,cy,r);
   } else if(appearance.hairStyle==='long') {
     hairLayer.fillRoundedRect(-33,-186,67,26,13).fillTriangle(-33,-174,-13,-172,-30,-137).fillTriangle(5,-177,34,-173,31,-137);
+  }
+  if(appearance.hairStyle!=='bald'){
+    hairLayer.lineStyle(3,0xffedba,.35).beginPath().moveTo(-23,-178).lineTo(-13,-183).moveTo(-5,-184).lineTo(4,-188).moveTo(14,-177).lineTo(23,-181).strokePath();
+    hairLayer.lineStyle(3,outline,.45).lineBetween(-28,-163,-24,-173);
   }
   const detail=scene.add.graphics(); root.add(detail); detail.fillStyle(hair);
   if(appearance.detail==='beard') detail.fillTriangle(-26,-130,28,-130,2,-93).fillRoundedRect(-28,-139,10,22,4).fillRoundedRect(20,-139,10,22,4);
@@ -81,7 +99,9 @@ export function makeHero(scene: Phaser.Scene, x: number, y: number, chosen: Hero
   }
   const hand = scene.add.graphics();
   hand.fillStyle(color(palette.value)).fillRoundedRect(-13, -29, 19, 24, 7);
-  hand.fillStyle(skin).fillCircle(0, 0, 11);
+  hand.fillStyle(outline).fillCircle(0,0,13);
+  hand.fillStyle(skin).fillCircle(0, 0, 10);
+  hand.lineStyle(2,outline,.5).lineBetween(-5,1,4,1).lineBetween(-4,5,3,5);
   arm.add([weapon, hand]);
   arm.setAngle(12);
   root.add(arm);
@@ -133,6 +153,12 @@ export function makeDummy(scene: Phaser.Scene, x: number, y: number, progress?:T
     if(d.exam){g.fillStyle(0xefcf78).fillTriangle(-30,-211,-38,-240,0,-222).fillTriangle(0,-222,38,-240,30,-211);root.setScale(1.15);}
     if(progress.hp<d.maxHp)g.lineStyle(3,0x493b32).beginPath().moveTo(-20,-130).lineTo(3,-110).lineTo(-8,-87).strokePath();
     if(progress.hp<d.maxHp/2)g.lineStyle(5,0x493b32).beginPath().moveTo(25,-137).lineTo(12,-116).lineTo(24,-73).strokePath();
+  }
+  if(progress&&progress.hp<dummyFor(progress).maxHp/3){
+    g.lineStyle(4,0x493b32).beginPath().moveTo(-16,-198).lineTo(2,-181).lineTo(-6,-161).strokePath();
+    g.fillStyle(0xe8ce96).fillTriangle(26,-75,39,-57,22,-60);
+    g.lineStyle(3,0xe8ce96).lineBetween(-53,-105,-68,-79);
+    root.setAngle(-4);
   }
   return root;
 }

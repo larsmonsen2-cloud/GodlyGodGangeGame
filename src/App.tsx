@@ -110,8 +110,8 @@ export function App() {
       <section className="battle-region" aria-label="Spillområde">
         {!arena && <TrainingHud training={state.hero.training} reward={state.trainingReward}/>}
         <SceneView key={`${state.activeHeroId}-${state.sessionId}`} appearance={state.hero.appearance} color={state.hero.color} weapon={state.hero.weapon} training arena={arena} enemyId={state.combat?.enemyId} encounter={state.combat?.id} reduced={reduced} />
-        {state.levelUp && <div key={state.levelUp} className="level-banner" role="status"><LevelEmblem level={state.levelUp} compact/><div><strong>Nivå opp!</strong><small>Egenskapspoeng klare</small></div></div>}
-        {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training status={state.storageStatus} />}
+        {state.levelUp && arena && <div key={state.levelUp} className="level-banner" role="status"><LevelEmblem level={state.levelUp} compact/><div><strong>Nivå opp!</strong><small>Egenskapspoeng klare</small></div></div>}
+        {arena && state.combat ? <ArenaHud hero={state.hero} combat={state.combat} feedbackLocked={feedback !== 'answering'} /> : <Progress hero={state.hero} training celebrate={!!state.levelUp} status={state.storageStatus} />}
         <SpecialMeter streak={state.streak} flash={state.specialFlash} brokenFrom={state.brokenFrom} magic={WEAPONS[state.hero.weapon].kind==='magic'} questionId={question.id}/>
         <div className="battle-savings"><SavingGoal hero={state.hero} compact /></div>
       </section>

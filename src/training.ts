@@ -14,6 +14,7 @@ export const TRAINING_RULES={perRank:10,examMultiplier:2,bonusDivisor:8};
 export type Training={rank:number;position:number;hp:number;broken:number;bestHit:number;medals:number[]};
 export const freshTraining=():Training=>({rank:0,position:0,hp:TRAINING[0].health,broken:0,bestHit:0,medals:[]});
 export const dummyFor=(t:Training)=>{const r=TRAINING[t.rank],exam=t.position===TRAINING_RULES.perRank-1;return {...r,exam,title:exam?r.exam:r.dummy,maxHp:r.health*(exam?TRAINING_RULES.examMultiplier:1)};};
+export const dummyBonus=(t:Training)=>dummyFor(t).maxHp/TRAINING_RULES.bonusDivisor;
 export function validTraining(value:unknown):value is Training {
  const t=value as Training;
  return !!t&&[t.rank,t.position,t.hp,t.broken,t.bestHit].every(n=>Number.isSafeInteger(n)&&n>=0)&&t.rank<TRAINING.length&&t.position<TRAINING_RULES.perRank&&t.hp>0&&t.hp<=dummyFor(t).maxHp&&Array.isArray(t.medals)&&new Set(t.medals).size===t.medals.length&&t.medals.every(n=>Number.isInteger(n)&&n>=0&&n<TRAINING.length);
@@ -24,7 +25,7 @@ export function trainHit(previous:Training,damage:number) {
  if(!Number.isSafeInteger(damage)||damage<0)return {training:t,bonus,count};
  t.bestHit=Math.max(t.bestHit,damage);
  while(left>=t.hp){
-  left-=t.hp;bonus+=dummyFor(t).maxHp/TRAINING_RULES.bonusDivisor;count++;t.position++;
+  left-=t.hp;bonus+=dummyBonus(t);count++;t.position++;
   if(t.position===TRAINING_RULES.perRank){if(!t.medals.includes(t.rank))t.medals.push(t.rank);t.rank=Math.min(TRAINING.length-1,t.rank+1);t.position=0;}
   t.hp=dummyFor(t).maxHp;
   if(t.rank===TRAINING.length-1&&t.position===0){

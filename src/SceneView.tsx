@@ -1,3 +1,4 @@
+import {battleFrame} from './sceneLayout';
 import {ARENAS,arenaIndex} from './arenas';
 import { DEFAULT_APPEARANCE, type Appearance } from './appearance';
 import { enemyShapes } from './enemyVisuals';
@@ -48,18 +49,21 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
          }
          if(index)env.fillStyle(ink,.15).fillEllipse(360,365,650,65);
         }
-        const homeX = training ? 195 : 290;
-        const homeY = training ? 352 : 450;
+        let frame=battleFrame(weapon,arena?enemyShapes(enemyId):null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,arena&&enemyById(enemyId).boss);
+        const fitCamera=()=>{if(!training)return;const camera=this.cameras.main;camera.setZoom(Math.min(this.scale.width/frame.width,this.scale.height/frame.height));camera.centerOn(frame.left+frame.width/2,frame.top+frame.height/2);};
+        fitCamera();this.scale.on('resize',fitCamera);this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.scale.off('resize',fitCamera));
+        const homeX = training ? 155 : 290;
+        const homeY = training ? 350 : 450;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
         const hero = makeHero(this, homeX, homeY, color, weapon, appearance);
-        hero.root.setScale(training ? 1.03 : 1.62);
+        hero.root.setScale(training ? frame.heroScale : 1.62);
         const idle = reduced ? null : this.tweens.add({
           targets: hero.root, y: homeY - (training ? 4 : 6),
           duration: CONFIG.timing.idle, yoyo: true, repeat: -1, ease: 'Sine.inOut',
         });
         if (!training) return;
-        this.add.ellipse(530, homeY, 110, 18, 0x1b3932, .35);
-        let dummy = arena ? this.add.container(530,homeY) : makeDummy(this,530,homeY,game.getSnapshot().hero?.training);
+        this.add.ellipse(535, homeY, 110, 18, 0x1b3932, .35);
+        let dummy = arena ? this.add.container(535,homeY) : makeDummy(this,535,homeY,game.getSnapshot().hero?.training);
         if(arena) {
           const g=this.add.graphics(); dummy.add(g);
           for(const shape of enemyShapes(enemyId)) {
@@ -69,7 +73,9 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
             else g.fillRect(shape.x,shape.y,shape.width,shape.height);
           }
         }
-        if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: .96, scaleX: 1.04, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
+        dummy.setScale(dummy.scaleX*frame.targetScale);
+        const targetRestScale=dummy.scaleX;
+        if (arena && !reduced) this.tweens.add({ targets: dummy, scaleY: targetRestScale*.98, scaleX: targetRestScale*1.02, duration: CONFIG.timing.idle, yoyo: true, repeat: -1 });
         const restArmAngle=hero.arm.angle;
         const identity=game.getSnapshot();
         const validEvent=(event:Attack)=>!disposed && event.heroId===identity.activeHeroId && event.sessionId===identity.sessionId && game.getSnapshot().activeHeroId===event.heroId && game.getSnapshot().sessionId===event.sessionId && game.getSnapshot().question?.id===event.questionId;
@@ -81,16 +87,16 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
           const reward=!arena?game.getSnapshot().trainingReward:null;
           if(reward?.count){
            sound.play('break');
-           if(reduced)dummy.setAlpha(.25);else{this.tweens.add({targets:dummy,angle:65,scaleY:.15,alpha:.25,duration:280});for(let i=0;i<6;i++){const chip=this.add.rectangle(530,250,12,19,0xdac18b);this.tweens.add({targets:chip,x:470+i*22,y:350,angle:i*51,alpha:0,duration:400,onComplete:()=>chip.destroy()});}}
+           if(reduced)dummy.setAlpha(.25);else{this.tweens.add({targets:dummy,angle:65,scaleY:.15,alpha:.25,duration:280});for(let i=0;i<6;i++){const chip=this.add.rectangle(535,250,12,19,0xdac18b);this.tweens.add({targets:chip,x:470+i*22,y:350,angle:i*51,alpha:0,duration:400,onComplete:()=>chip.destroy()});}}
           }
-          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();dummy=makeDummy(this,530,homeY,game.getSnapshot().hero?.training);});
+          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();frame=battleFrame(weapon,null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240);fitCamera();dummy=makeDummy(this,535,homeY,game.getSnapshot().hero?.training);dummy.setScale(dummy.scaleX*frame.targetScale);});
           const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
           if (defeated) {
             this.tweens.killTweensOf(dummy);
             if (reduced) dummy.setAlpha(.4);
-            else this.tweens.add({ targets: dummy, scaleY: .22, scaleX: 1.18, alpha: .4, duration: CONFIG.timing.defeat, ease: 'Sine.out' });
+            else this.tweens.add({ targets: dummy, scaleY: .22, scaleX: targetRestScale*1.18, alpha: .4, duration: CONFIG.timing.defeat, ease: 'Sine.out' });
           }
-          const text = this.add.text(527, 135, event.special?`SUPER!\n−${event.damage}`:`−${event.damage}`, {
+          const text = this.add.text(527, frame.top+65, event.special?`SUPER!\n−${event.damage}`:`−${event.damage}`, {
             fontFamily: 'Georgia, serif', fontSize: event.special?'52px':'44px', fontStyle: 'bold', align:'center',
             color: '#fff3b9', stroke: '#473a2c', strokeThickness: 5,
           }).setOrigin(.5);
@@ -105,8 +111,8 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
             const spark = this.add.circle(527, 240, 4, impactColor);
             this.tweens.add({ targets: spark, x: 527 + Math.cos(angle) * (event.special?90:60), y: 240 + Math.sin(angle) * (event.special?70:48), alpha: 0, duration: CONFIG.timing.impact, onComplete: () => spark.destroy() });
           }
-          this.tweens.add({ targets: text, y: 87, alpha: 0, duration: event.special?CONFIG.special.damageFloat:CONFIG.timing.damageFloat, ease: 'Cubic.out', onComplete: () => text.destroy() });
-          this.tweens.add({ targets: dummy, angle: event.special?18:9, duration: CONFIG.timing.hit, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
+          this.tweens.add({ targets: text, y: frame.top+(event.special?65:30), alpha: 0, duration: event.special?CONFIG.special.damageFloat:CONFIG.timing.damageFloat, ease: 'Cubic.out', onComplete: () => text.destroy() });
+          if(!reward?.count&&!defeated)this.tweens.add({ targets: dummy, angle: event.special?12:6, duration: CONFIG.timing.hit, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
           const flash = this.add.graphics();
           flash.lineStyle(7, 0xffdf8b, .95).beginPath().moveTo(469, 218).lineTo(444, 205).moveTo(479, 188).lineTo(467, 166).moveTo(481, 248).lineTo(456, 265).strokePath();
           this.tweens.add({ targets: flash, alpha: 0, duration: CONFIG.timing.attackReturn, onComplete: () => flash.destroy() });
@@ -115,7 +121,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
           if(!validEvent(event))return;
           if (event.kind === 'magic') {
             sound.play('magic');
-            const projectile = this.add.container(reduced ? 510 : 244, 217);
+            const projectile = this.add.container(reduced ? 510 : 202, 235);
             const glow = this.add.graphics();
             glow.fillStyle(weaponEffectColor(weapon), .25).fillCircle(0, 0, 25);
             glow.fillStyle(weaponEffectColor(weapon)).fillCircle(0, 0, 12);
@@ -123,25 +129,28 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
             projectile.add(glow);
             if(event.special&&!reduced){
               projectile.setScale(1.8);
-              const charge=this.add.circle(244,217,32,weaponEffectColor(weapon),.45);
+              const charge=this.add.circle(202,235,32,weaponEffectColor(weapon),.45);
               this.tweens.add({targets:charge,scale:1.25,alpha:0,duration:CONFIG.special.windup,onComplete:()=>charge.destroy()});
             }
             if (reduced) {
               hit(event);
               this.time.delayedCall(CONFIG.timing.projectile, () => projectile.destroy());
             } else {
-              this.tweens.add({ targets: hero.arm, angle: 48, duration: CONFIG.timing.attackSwing, yoyo: true });
+              this.tweens.add({ targets: hero.arm, angle: -28, duration: 110, yoyo: true, onComplete:()=>hero.arm.setAngle(restArmAngle) });
               this.tweens.add({ targets: projectile, x: 520, delay:event.special?CONFIG.special.windup:0, duration: event.special?CONFIG.special.projectile:CONFIG.timing.projectile, ease: 'Sine.in', onComplete: () => { projectile.destroy(); hit(event); } });
             }
             return;
           }
           if (reduced) { hit(event); return; }
           idle?.pause();
-          if(event.special)this.tweens.add({targets:hero.arm,angle:-55,duration:CONFIG.special.windup,ease:'Sine.out'});
+          const heavy=WEAPONS[weapon].tier>=3;
+          const windup=event.special?CONFIG.special.windup:heavy?110:70;
+          this.tweens.add({targets:hero.arm,angle:-40,duration:windup,ease:'Sine.out'});
+          this.tweens.add({targets:hero.root,angle:-4,duration:windup,yoyo:true});
           this.tweens.add({
-            targets: hero.root, x: 402, delay:event.special?CONFIG.special.windup:0, duration: CONFIG.timing.attackForward, ease: 'Cubic.in',
+            targets: hero.root, x: 340, delay:windup, duration: CONFIG.timing.attackForward, ease: 'Cubic.in',
             onComplete: () => {
-              this.tweens.add({ targets: hero.arm, angle: event.special?135:98, duration: CONFIG.timing.attackSwing, yoyo: true, ease: 'Cubic.out' });
+              this.tweens.add({ targets: hero.arm, angle: event.special?100:heavy?95:80, duration: CONFIG.timing.attackSwing, yoyo: true, ease: 'Cubic.out' });
               if(event.special){
                 const arc=this.add.graphics();arc.lineStyle(12,weaponEffectColor(weapon),.85).beginPath().arc(432,225,105,-1.9,1.1).strokePath();
                 this.tweens.add({targets:arc,alpha:0,duration:CONFIG.special.impact,onComplete:()=>arc.destroy()});
@@ -153,7 +162,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
         });
         const offEnemy = arena ? game.onEnemyAttack(damage => {
           sound.play('hurt');
-          const text = this.add.text(homeX, 135, `−${damage}`, { fontFamily: 'Georgia, serif', fontSize: '44px', color: '#ffd4b8', stroke: '#473a2c', strokeThickness: 5 }).setOrigin(.5);
+          const text = this.add.text(homeX, frame.top+65, `−${damage}`, { fontFamily: 'Georgia, serif', fontSize: '44px', color: '#ffd4b8', stroke: '#473a2c', strokeThickness: 5 }).setOrigin(.5);
           if (reduced) this.time.delayedCall(CONFIG.timing.damageFloat, () => text.destroy());
           else {
             this.tweens.add({ targets: text, y: 87, alpha: 0, duration: CONFIG.timing.damageFloat, onComplete: () => text.destroy() });
@@ -169,13 +178,13 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
     const instance = new Phaser.Game({
       type: thumbnail ? Phaser.CANVAS : Phaser.AUTO,
       parent: host.current,
-      width: training ? 720 : 600,
-      height: training ? 420 : 560,
+      width: training ? host.current.clientWidth : 600,
+      height: training ? host.current.clientHeight : 560,
       backgroundColor: '#264d48',
       transparent: false,
       antialias: true,
       scene: ForestScene,
-      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scale: { mode: training ? Phaser.Scale.RESIZE : Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       audio: { noAudio: true },
       input: { keyboard: false, mouse: false, touch: false },
       banner: false,

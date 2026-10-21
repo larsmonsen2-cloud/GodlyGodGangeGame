@@ -28,8 +28,8 @@ export function StorageNotice({ status }: { status: StorageStatus }) {
 
 export function Progress({ hero, training = false, status = 'saved', emblem = false, celebrate = false }: { hero: Hero; training?: boolean; status?: StorageStatus; emblem?:boolean; celebrate?:boolean }) {
   const remaining = answersToLevel(hero);
-  return <div className={emblem?'emblem-progress':undefined}>{emblem&&<LevelEmblem level={hero.level} celebrate={celebrate}/>}<div className={`progress-summary ${training ? 'training-progress' : ''}`}>
-    <div>{!emblem&&<b>Nivå {hero.level}</b>}<span>{hero.xp}/{xpNeeded(hero.level)} XP</span></div>
+  return <div className={emblem?'emblem-progress':undefined}>{emblem&&<LevelEmblem level={hero.level} celebrate={celebrate}/>}<div className={`progress-summary ${training ? 'training-progress' : ''} ${celebrate?'xp-celebrating':''}`}>
+    <div>{!emblem&&<b role={training?'status':undefined}>{training&&celebrate?`Nivå ${hero.level} ↑ Poeng klare`:`Nivå ${hero.level}`}</b>}<span>{hero.xp}/{xpNeeded(hero.level)} XP</span></div>
     <progress value={hero.xp} max={xpNeeded(hero.level)} aria-label="XP til neste nivå" />
     {training && status !== 'saved' ? <StorageNotice status={status} /> : <p>Høyst {remaining} {remaining === 1 ? 'riktig svar' : 'riktige svar'} til nivå {hero.level + 1}</p>}
   </div></div>;
@@ -71,3 +71,4 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     </Modal>}
   </>;
 }
+
