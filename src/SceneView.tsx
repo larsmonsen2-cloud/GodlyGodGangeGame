@@ -1,10 +1,13 @@
+import {HeroPackContext} from './HeroPackContext';
+import {PACK_HEIGHT,fitPackFrame} from './heroPackGeometry';
+import {makeIllustratedHero} from './illustratedHero';
 import {cosmeticHeight} from './cosmeticParts';
 import {battleFrame} from './sceneLayout';
 import {ARENAS,arenaIndex} from './arenas';
 import { DEFAULT_APPEARANCE, type Appearance } from './appearance';
 import { enemyShapes } from './enemyVisuals';
 import { enemyById, type EnemyId } from './enemies';
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { makeBackground, makeDummy, makeHero } from './art';
 import { CONFIG, type HeroColor } from './config';
@@ -18,6 +21,9 @@ type Props = { thumbnail?: boolean; appearance?: Appearance; color: HeroColor; w
 
 export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEARANCE, weapon = 'stick', training = false, arena = false, enemyId = 'goran', encounter, reduced }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const pack=useContext(HeroPackContext);
+  // Explicit preview only. Purchased game equipment keeps its existing renderer.
+  const packImage=WEAPONS[weapon].tier===0?pack?.image??null:null;
   useEffect(() => {
     if (!host.current) return;
     let disposed = false;
@@ -50,13 +56,14 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
          }
          if(index)env.fillStyle(ink,.15).fillEllipse(360,365,650,65);
         }
-        let frame=battleFrame(weapon,arena?enemyShapes(enemyId):null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,arena&&enemyById(enemyId).boss,cosmeticHeight(appearance));
+        const heroHeight=packImage?PACK_HEIGHT:cosmeticHeight(appearance);
+        let frame=battleFrame(weapon,arena?enemyShapes(enemyId):null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,arena&&enemyById(enemyId).boss,heroHeight);if(packImage)frame=fitPackFrame(frame);
         const fitCamera=()=>{if(!training)return;const camera=this.cameras.main;camera.setZoom(Math.min(this.scale.width/frame.width,this.scale.height/frame.height));camera.centerOn(frame.left+frame.width/2,frame.top+frame.height/2);};
         fitCamera();this.scale.on('resize',fitCamera);this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.scale.off('resize',fitCamera));
         const homeX = training ? 155 : 200;
         const homeY = training ? 350 : 440;
         this.add.ellipse(homeX, homeY, training ? 100 : 156, 19, 0x1b3932, .35);
-        const hero = makeHero(this, homeX, homeY, color, weapon, appearance);
+        const hero = packImage?makeIllustratedHero(this,homeX,homeY,packImage,training):makeHero(this, homeX, homeY, color, weapon, appearance);
         hero.root.setScale(training ? frame.heroScale : 1.62);
         const idle = reduced ? null : this.tweens.add({
           targets: hero.root, y: homeY - (training ? 4 : 6),
@@ -90,7 +97,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
            sound.play('break');
            if(reduced)dummy.setAlpha(.25);else{this.tweens.add({targets:dummy,angle:65,scaleY:.15,alpha:.25,duration:280});for(let i=0;i<6;i++){const chip=this.add.rectangle(535,250,12,19,0xdac18b);this.tweens.add({targets:chip,x:470+i*22,y:350,angle:i*51,alpha:0,duration:400,onComplete:()=>chip.destroy()});}}
           }
-          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();frame=battleFrame(weapon,null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,false,cosmeticHeight(appearance));fitCamera();dummy=makeDummy(this,535,homeY,game.getSnapshot().hero?.training);dummy.setScale(dummy.scaleX*frame.targetScale);});
+          if(!arena)this.time.delayedCall(reward?.count?450:120,()=>{if(!validEvent(event))return;dummy.destroy();frame=battleFrame(weapon,null,(game.getSnapshot().hero?.training.rank??0)>=2?288:240,false,heroHeight);if(packImage)frame=fitPackFrame(frame);fitCamera();dummy=makeDummy(this,535,homeY,game.getSnapshot().hero?.training);dummy.setScale(dummy.scaleX*frame.targetScale);});
           const defeated = arena && game.getSnapshot().combat?.outcome === 'won';
           if (defeated) {
             this.tweens.killTweensOf(dummy);
@@ -138,6 +145,7 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
               this.time.delayedCall(CONFIG.timing.projectile, () => projectile.destroy());
             } else {
               this.tweens.add({ targets: hero.arm, angle: -28, duration: 110, yoyo: true, onComplete:()=>hero.arm.setAngle(restArmAngle) });
+              if(packImage)this.tweens.add({targets:hero.root,angle:-4,duration:110,yoyo:true});
               this.tweens.add({ targets: projectile, x: 520, delay:event.special?CONFIG.special.windup:0, duration: event.special?CONFIG.special.projectile:CONFIG.timing.projectile, ease: 'Sine.in', onComplete: () => { projectile.destroy(); hit(event); } });
             }
             return;
@@ -203,8 +211,8 @@ export function SceneView({ thumbnail = false, color, appearance = DEFAULT_APPEA
       instance.canvas?.remove();
       instance.destroy(true);
     };
-  }, [thumbnail, color, appearance, weapon, training, arena, enemyId, encounter, reduced]);
+  }, [thumbnail, color, appearance, weapon, training, arena, enemyId, encounter, reduced, packImage]);
 
   return <div className={`scene ${training ? 'scene-training' : 'scene-portrait'}`} ref={host}
-    role="img" aria-label={`${arena ? `Helten mot ${enemyById(enemyId).name}` : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
+    role="img" aria-label={packImage?`Illustrert prøvehelt: ${pack!.selection.hair==='braid'?'lang flette':'bustete hår'}, ${pack!.selection.outfit==='dress'?'kjole':'tunika'}, ${pack!.selection.weapon==='staff'?'stav':'sverd'}. ${training?'Kampvisning.':'Portrett.'}`:`${arena ? `Helten mot ${enemyById(enemyId).name}` : training ? 'Helten mot en treningsdummy' : 'Din helt med fargede klær og skinnstøvler'}, med ${WEAPONS[weapon].name}.`} />;
 }

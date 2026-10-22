@@ -1,0 +1,26 @@
+.hero-pack-test{padding-top:44px;min-height:100dvh}
+.pack-test-bar{height:44px;position:fixed;top:0;left:0;right:0;z-index:20;background:#142c2b;border-bottom:1px solid #70947f;display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:8px;color:#f2e6c8;font-size:12px}
+.pack-test-bar button{min-height:40px;background:transparent;border:0;color:#f2e6c8;font:inherit}
+.pack-builder{max-width:1000px;margin:auto;padding:20px}
+.pack-heading h1{font-size:30px;margin:8px 0}.pack-heading p,.pack-gallery>p{font-size:13px;line-height:1.5;color:#c6d7c3}
+.pack-builder-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}
+.pack-portrait{border-radius:18px;overflow:hidden;background:#264d48;align-self:start}
+.pack-portrait .scene-portrait{height:min(60dvh,560px);min-height:0}
+.pack-controls{background:#f5f0e3;color:#293e33;border-radius:18px;padding:18px}
+.pack-controls fieldset{border:0;margin:0 0 10px;padding:0;display:flex;gap:8px}.pack-controls legend{font-weight:700;font-size:12px;margin-bottom:5px}
+.pack-controls button{min-height:44px;border:1px solid #b5c4a7;border-radius:8px;padding:8px 12px;background:#e5ead8;color:#29473b;font:inherit;font-size:12px}
+.pack-controls fieldset button{flex:1}.pack-controls button[aria-pressed=true]{background:#305b47;color:#fff2d5;border-color:#305b47}.pack-controls button:focus-visible,.pack-test-bar button:focus-visible{outline:3px solid #c99535;outline-offset:2px}
+.pack-status,.pack-explanation{font-size:11px;line-height:1.5;margin:8px 0}
+.pack-check{display:flex;align-items:center;gap:8px;min-height:36px;font-size:12px}.pack-check input{width:18px;height:18px;accent-color:#305b47}
+.pack-profile{display:flex;align-items:center;gap:10px;font-size:12px;margin:10px 0}.pack-profile select{min-height:44px;min-width:0;flex:1;background:#fffcf3;border:1px solid #b5c4a7;border-radius:7px;padding:6px;color:#29473b;font:inherit}
+.pack-view-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.pack-view-buttons button:last-child{grid-column:1/-1}
+.pack-gallery{max-width:1100px;margin:auto;padding:22px}.pack-gallery h1{font-size:28px;margin-bottom:10px}.pack-gallery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.pack-gallery-card{margin:0;background:#f7edd8;color:#29473b;border-radius:12px;overflow:hidden}.pack-gallery-card>div{display:flex;align-items:end;justify-content:center;padding:8px 0}.pack-gallery-card img{width:76%;height:auto;min-width:0}.pack-gallery-card .pack-small{width:24%}.pack-gallery-card figcaption{font-size:11px;padding:10px;text-align:center}
+.hero-pack-test .training-shell{height:calc(100dvh - 44px);margin-top:0;margin-bottom:0}
+@media(max-width:650px){.pack-builder{padding:14px}.pack-heading h1{font-size:23px}.pack-builder-layout{grid-template-columns:1fr;gap:12px;margin-top:12px}.pack-portrait{position:sticky;top:44px;z-index:2;border:1px solid #537e67}.pack-portrait .scene-portrait{height:clamp(175px,30dvh,260px)}.pack-controls{padding:14px}.pack-gallery{padding:14px}.pack-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-height:740px) and (orientation:portrait){.hero-pack-test .training-header{flex-basis:44px;min-height:44px}.hero-pack-test .battle-region{min-height:110px}.hero-pack-test .math-region{padding:8px 18px max(9px,env(safe-area-inset-bottom))}.hero-pack-test .math-heading{display:none}.hero-pack-test .question-space{height:72px}.hero-pack-test .feedback-message{height:26px;min-height:26px;margin-bottom:2px}.hero-pack-test .submit{min-height:44px;margin-top:8px}}
+/* During play the existing back button returns to the test hero. Keep the full
+   gameplay viewport available instead of putting test controls above the scene. */
+.hero-pack-test.pack-playing{padding-top:0}
+.pack-playing .pack-test-bar{display:none}
+.hero-pack-test.pack-playing .training-shell{height:100dvh}
+@media(max-width:650px){.hero-pack-test .site-header .brand{font-size:clamp(16px,4.5vw,23px);min-width:0}.hero-pack-test .site-header .brand-dot{display:none}.hero-pack-test .site-header .sound-button{flex-shrink:0}}

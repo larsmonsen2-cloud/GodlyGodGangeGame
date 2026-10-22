@@ -1,3 +1,5 @@
+import {isHeroPackTest} from './previewMode';
+import {heroPackStorage} from './heroPackSeed';
 import {emptyBackground,validBackground,type Background} from './background';
 import {trainHit} from './training';
 import { normalizeAppearance, validAppearance, type Appearance } from './appearance';
@@ -338,4 +340,4 @@ export class GameStore {
   }
 }
 
-export const game = new GameStore(Math.random, browserStorage());
+export const game = new GameStore(Math.random, isHeroPackTest ? heroPackStorage() : browserStorage());

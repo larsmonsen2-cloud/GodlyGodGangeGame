@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 440,
+    "height": 590
+  },
+  "layerOrder": [
+    "body",
+    "head",
+    "hair",
+    "weapon"
+  ],
+  "choices": {
+    "hair": {
+      "short": "hairShort",
+      "braid": "hairBraid"
+    },
+    "outfit": {
+      "tunic": "bodyTunic",
+      "dress": "bodyDress"
+    },
+    "weapon": {
+      "sword": "weaponSwordHand",
+      "staff": "weaponStaffHand"
+    }
+  },
+  "assets": {
+    "head": {
+      "file": "assets/head.png",
+      "sourceSize": {
+        "width": 730,
+        "height": 395
+      },
+      "destination": {
+        "x": 70,
+        "y": 60,
+        "width": 365,
+        "height": 197.5
+      }
+    },
+    "bodyTunic": {
+      "file": "assets/body-tunic.png",
+      "sourceSize": {
+        "width": 730,
+        "height": 629
+      },
+      "destination": {
+        "x": 70,
+        "y": 257.5,
+        "width": 365,
+        "height": 314.5
+      }
+    },
+    "bodyDress": {
+      "file": "assets/body-dress.png",
+      "sourceSize": {
+        "width": 730,
+        "height": 629
+      },
+      "destination": {
+        "x": 70,
+        "y": 257.5,
+        "width": 365,
+        "height": 314.5
+      }
+    },
+    "hairShort": {
+      "file": "assets/hair-short.png",
+      "sourceSize": {
+        "width": 480,
+        "height": 410
+      },
+      "destination": {
+        "x": 174,
+        "y": 58,
+        "width": 240,
+        "height": 205
+      }
+    },
+    "hairBraid": {
+      "file": "assets/hair-braid.png",
+      "sourceSize": {
+        "width": 480,
+        "height": 599
+      },
+      "destination": {
+        "x": 174,
+        "y": 75.5,
+        "width": 240,
+        "height": 299.5
+      }
+    },
+    "weaponSwordHand": {
+      "file": "assets/weapon-sword-hand.png",
+      "sourceSize": {
+        "width": 285,
+        "height": 690
+      },
+      "destination": {
+        "x": 95,
+        "y": 47.5,
+        "width": 142.5,
+        "height": 345
+      }
+    },
+    "weaponStaffHand": {
+      "file": "assets/weapon-staff-hand.png",
+      "sourceSize": {
+        "width": 280,
+        "height": 890
+      },
+      "destination": {
+        "x": 104.6,
+        "y": 10,
+        "width": 134.4,
+        "height": 427.2
+      }
+    }
+  },
+  "notes": [
+    "Fixed skin tone; body outfits include arms and boots.",
+    "Hand and weapon form one layer without sleeve.",
+    "Do not trim transparent padding or change geometry independently."
+  ]
+}

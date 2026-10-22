@@ -1,4 +1,5 @@
 import { CONFIG } from './config';
+import {isHeroPackTest} from './previewMode';
 import type { GameStore } from './store';
 
 export type Sound = 'hit' | 'magic' | 'hurt' | 'level' | 'victory' | 'correct' | 'break' | 'boss';
@@ -65,7 +66,7 @@ export class SoundEngine {
   }
 }
 
-function preferenceStorage() { try { return window.localStorage; } catch { return null; } }
+function preferenceStorage() { if(isHeroPackTest)return null;try { return window.localStorage; } catch { return null; } }
 export const sound = new SoundEngine(() => new AudioContext(), preferenceStorage());
 
 export function bindSound(store: GameStore, audio: Pick<SoundEngine, 'play' | 'stop'>) {
