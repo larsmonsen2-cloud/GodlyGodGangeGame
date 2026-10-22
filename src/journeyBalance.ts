@@ -1,3 +1,4 @@
+import {simulateJourney} from './paceBalance';
 import {ENEMIES} from './enemies';
 import {estimateFight} from './balance';
 export function journeyBalanceMarkdown(){
@@ -10,5 +11,8 @@ export function journeyBalanceMarkdown(){
  for(let i=0;i<10;i++)lines.push(`| ${i+1} | ${ENEMIES.slice(i*10,i*10+10).reduce((sum,e)=>sum+e.gold+e.bonus,0)} | ${Math.min(19,i*2+1)}–${Math.min(19,i*2+2)} |`);
  lines.push('','Nye priser 400–18000 gull, gamle priser 50/125/250 beholdes. Siste boss gir 4607 gull per seier: siste våpen koster høyst fire slike seire fra tom saldo. To våpenserier krever mer gull enn én. Tidligere motstandere oppskaleres aldri.','','## Faste motstanderdata','','| # | Motstander | Liv | Skade | Gull | Første bonus |','|---|---|---:|---:|---:|---:|');
  for(const e of ENEMIES)lines.push(`| ${e.number} | ${e.name} | ${e.health} | ${e.damage} | ${e.gold} | ${e.bonus} |`);
+ lines.push('','## Tren–kjemp–handle gjennom alle 100 kamper','','Simulert med korrekt XP fra treningsdukker, femtesvarsspesial, 1 angrepspoeng per 2 helsepoeng og kjøp av alle rimelige neste våpen før hver kamp. Trening stopper så snart neste kamp kan vinnes. Ingen XP fra kamp og ingen ekstra gullfarming. Tallene er en modell med feilfrie svar, ikke en garanti for hver spiller.','','| Aktiv svartid | Kamper som krevde ny trening | Lengste seiersrekke uten trening | Riktige treningssvar totalt | Sluttnivå | Våpenkjøp før siste seier |','|---|---:|---:|---:|---:|---:|');
+ for(const seconds of [2,3,5,8]){const r=simulateJourney(seconds);lines.push(`| ${seconds} s | ${r.trainingStops} | ${r.longestRun} | ${r.trainingAnswers} | ${r.hero.level} | ${r.purchases} |`);}
+ lines.push('','Fra kamp 11 stiger helse og skade uten nye arenaers tidligere tilbakefall. Helse følger 400 × 1,04^(kamp−10), med 2 % ekstra på hver boss; skade følger 16 × (1 + 0,06 × (kamp−10)), avrundet til heltall. Verdiene er lagret som faste motstandertall, aldri beregnet fra helten. Første arena, våpen, priser, gullbelønning, XP, poeng og lagring er uendret.','','Raske eller tidligere overtrente helter kan fortsatt vinne flere kamper på rad. Oppgraderinger skal gi et merkbart forsprang, men arenaoverganger skal ikke nullstille utfordringen. Langsomme svar krever mer trening/helse; dette bør følges opp med faktisk spilling.');
  return lines.join('\n')+'\n';
 }
