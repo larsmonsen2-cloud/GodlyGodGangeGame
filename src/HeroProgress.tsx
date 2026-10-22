@@ -39,12 +39,11 @@ export function Progress({ hero, training = false, status = 'saved', emblem = fa
 const attributes: { key: Attribute; label: string }[] = [
   { key: 'strength', label: 'Styrke' },
   { key: 'magic', label: 'Magi' },
-  { key: 'maxHealth', label: 'Helse' },
+  { key: 'maxHealth', label: 'Maks liv' },
 ];
 
 export function HeroProgress({ hero, status, reputationNotice, levelCelebration }: { hero: Hero; status: StorageStatus; reputationNotice: string | null; levelCelebration:number|null }) {
   const [spent,setSpent]=useState('');
-  const [choosing, setChoosing] = useState(false);
   const weapon = WEAPONS[hero.weapon];
   const chronicle = heroChronicle(hero);
   return <>
@@ -52,10 +51,16 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <p className="hero-title">{chronicle.title}</p>
     <p className="hero-chronicle">{chronicle.story}</p>
     <details className="personal-history"><summary>Min historie</summary><p><b>Opprinnelse:</b> {ORIGINS.find(o=>o.id===hero.background.origin)?.name??'Ikke valgt ennå.'}</p><p><b>Stort mål:</b> {GOALS.find(g=>g.id===hero.background.goal)?.name??'Ikke valgt ennå.'}</p><button type="button" onClick={()=>game.openAppearance()}>Endre historie og utseende</button></details>
-    {reputationNotice && !choosing && <div className="reputation-notice" role="status"><strong>Ryktet ditt har vokst!</strong><button type="button" onClick={()=>game.dismissReputation()}>Fortsett</button></div>}
+    {reputationNotice && <div className="reputation-notice" role="status"><strong>Ryktet ditt har vokst!</strong><button type="button" onClick={()=>game.dismissReputation()}>Fortsett</button></div>}
     <Progress hero={hero} emblem celebrate={levelCelebration===hero.level} />
-    <dl className="hero-stats"><div><dt>Styrke</dt><dd>{hero.strength}</dd></div><div><dt>Magi</dt><dd>{hero.magic}</dd></div><div><dt>Maks liv</dt><dd>{hero.maxHealth}</dd></div></dl>
-    <button className="points-button" type="button" disabled={!hero.points} onClick={() => setChoosing(true)}>{hero.points ? `Fordel ${hero.points} poeng` : '0 ubrukte poeng'}<span aria-hidden="true">{hero.points ? '+' : '✦'}</span></button>
+    <dl className="hero-stats">{attributes.map(({key,label}) => <div key={key}>
+      <dt>{label}</dt><dd className="stat-with-upgrade"><span>{hero[key]}</span>{hero.points > 0 && <button className="stat-plus" type="button" aria-label={`Øk ${label.toLowerCase()} (1 poeng)`} onClick={() => {
+        game.spend(key);
+        setSpent(`${label} økte til ${game.getSnapshot().hero![key]}`);
+      }}><span aria-hidden="true">+</span></button>}</dd>
+    </div>)}</dl>
+    <p className="available-points" role="status">{hero.points} {hero.points === 1 ? 'tilgjengelig ferdighetspoeng' : 'tilgjengelige ferdighetspoeng'}</p>
+    <span className="sr-only" role="status">{spent}</span>
     <div className="equipped-weapon"><h3>{weapon.name}</h3><p>{weapon.description}</p></div>
     <div key={`${hero.weapon}-${damageFor(hero)}`} className="damage-summary changed-value"><span>{weapon.stat === 'strength' ? 'Styrke' : 'Magi'} {hero[weapon.stat]} + våpen {weapon.damage}</span><b>{damageFor(hero)} skade</b></div>
     <p className="training-record">{TRAINING[hero.training.rank].name} · {hero.training.broken} dukker knust · {hero.training.medals.length} merker · {hero.claimedBossBonuses.length} bosstroféer</p>
@@ -64,13 +69,6 @@ export function HeroProgress({ hero, status, reputationNotice, levelCelebration 
     <div className="hero-actions"><button className="primary" type="button" onClick={() => game.startTraining()}><span>Tren</span><span aria-hidden="true">→</span></button><button className="primary arena-button" type="button" onClick={() => game.openArena()}><span>Arena</span><span aria-hidden="true">⚔</span></button><button className="primary shop-button" type="button" onClick={() => game.openShop()}><span>Butikk</span><span aria-hidden="true">◇</span></button></div>
     <button className="edit-appearance" type="button" onClick={()=>game.openAppearance()}>Endre utseende og historie</button>
     <button className="edit-appearance" type="button" onClick={()=>game.openHeroes()}>Bytt helt</button>
-    {choosing && <Modal title="Gjør helten sterkere" onClose={() => setChoosing(false)}>
-      <p className="modal-description" role="status">{hero.points} ubrukte poeng · Hvert valg koster 1 poeng.</p>
-      <p role="status" className="stat-upgrade">{spent}</p><div className="attribute-choices">{attributes.map(({ key, label }) => <button key={key} type="button" disabled={!hero.points} onClick={() => {game.spend(key);setSpent(`${label} økte til ${game.getSnapshot().hero![key]}`);}}>
-        <b>{label}</b><span aria-hidden="true">+</span>
-      </button>)}</div>
-      <button type="button" className="primary" onClick={() => setChoosing(false)}>{hero.points ? 'Velg senere' : 'Ferdig'}</button>
-    </Modal>}
   </>;
 }
 
