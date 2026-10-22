@@ -34,7 +34,7 @@ function Mark() {
   return <span className="brand-mark" aria-hidden="true">×</span>;
 }
 function Header() {
-  return <header className="site-header"><a className="brand" href="./" aria-label="Gangriket, heltesiden"><Mark />Gangriket<span className="brand-dot">✦</span></a><SoundButton /></header>;
+  return <header className="site-header"><a className="brand" href="./" aria-label="GodlyGoodGangeGame, heltesiden"><Mark />GodlyGoodGangeGame<span className="brand-dot">✦</span></a><SoundButton /></header>;
 }
 
 export function App() {
